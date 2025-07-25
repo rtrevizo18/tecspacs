@@ -1,0 +1,12 @@
+{
+  "name": "tecspacs-clivscode",
+  "version": "0.0.1",
+  "description": "TecsPacs for CLI tool and VSCode extension",
+  "license": "ISC",
+  "author": "rtrevizo18",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
