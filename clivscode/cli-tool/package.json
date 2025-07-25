@@ -2,10 +2,12 @@
   "name": "tecspacs-cli-tool",
   "version": "0.0.1",
   "description": "Command line tool for tecspacs",
-  "license": "ISC",
+  "license": "MIT",
   "author": "rtrevizo18",
   "type": "module",
-  "main": "src/app.js",
+  "bin": {
+    "tcspcs": "bin/app.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write .",

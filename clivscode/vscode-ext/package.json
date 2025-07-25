@@ -2,10 +2,13 @@
   "name": "tecspacs-vscode-ext",
   "version": "0.0.1",
   "description": "VSCode Extension for tecspacs",
-  "license": "ISC",
+  "license": "MIT",
   "author": "rtrevizo18",
   "type": "module",
-  "main": "src/app.js",
+  "keywords": [
+    "vscode",
+    "vscode ext"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write .",
