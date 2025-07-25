@@ -6,14 +6,16 @@
   "author": "rtrevizo18",
   "type": "module",
   "bin": {
-    "tcspcs": "bin/app.js"
+    "tcspcs": "bin/tcspcs.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "push": "git push origin main:clivscode"
   },
   "dependencies": {
+    "commander": "^14.0.0",
     "node": "^20.19.4"
   },
   "devDependencies": {
