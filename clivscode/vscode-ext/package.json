@@ -1,0 +1,21 @@
+{
+  "name": "tecspacs-vscode-ext",
+  "version": "0.0.1",
+  "description": "VSCode Extension for tecspacs",
+  "license": "ISC",
+  "author": "rtrevizo18",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "node": "^20.19.4"
+  },
+  "devDependencies": {
+    "eslint": "^9.32.0",
+    "prettier": "^3.6.2"
+  }
+}
