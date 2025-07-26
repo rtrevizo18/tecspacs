@@ -131,30 +131,31 @@ const UserProfile: React.FC = () => {
         </div>
 
         {isOwnProfile && (
-          <StickyNote variant="default" className="mb-6">
-            <div className="flex gap-4">
+          <div className="relative mb-6">
+            <div className="flex gap-1 items-end border-b-2 border-pen-black">
               <button
                 onClick={() => setActiveTab("my")}
-                className={`px-4 py-2 font-bold transition-colors ${
+                className={`px-6 py-2 font-bold transition-all border border-pen-black rounded-t-md ${
                   activeTab === "my"
-                    ? "bg-pen-black text-white"
-                    : "bg-white text-pen-black border border-pen-black hover:bg-gray-100"
+                    ? "bg-sticky-default text-pen-black translate-y-[-2px] z-10 border-b-transparent"
+                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
                 }`}
               >
-                My Snippets ({userSnippets.length})
+                📁 My Snippets ({userSnippets.length})
               </button>
+
               <button
                 onClick={() => setActiveTab("saved")}
-                className={`px-4 py-2 font-bold transition-colors ${
+                className={`px-6 py-2 font-bold transition-all border border-pen-black rounded-t-md ${
                   activeTab === "saved"
-                    ? "bg-pen-black text-white"
-                    : "bg-white text-pen-black border border-pen-black hover:bg-gray-100"
+                    ? "bg-sticky-default text-pen-black translate-y-[-2px] z-10 border-b-transparent"
+                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
                 }`}
               >
-                Saved Snippets ({savedSnippets.length})
+                🔖 Saved Snippets ({savedSnippets.length})
               </button>
             </div>
-          </StickyNote>
+          </div>
         )}
 
         {featuredSnippets.length > 0 && (
