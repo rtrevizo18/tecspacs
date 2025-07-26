@@ -1,9 +1,27 @@
-// models/Pec.js --Eg
 const mongoose = require('mongoose');
-const PacSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  language: String,
-  tag: String,
-  user: String, // Add whatever fields are required by business logic
+
+const pacSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  dependencies: [{
+    type: String
+  }],
+  files: [{
+    type: String
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, {
+  timestamps: true
 });
-module.exports = mongoose.model('Pac', PacSchema);
+
+module.exports = mongoose.model('Pac', pacSchema); 

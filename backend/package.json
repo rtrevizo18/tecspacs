@@ -1,20 +1,27 @@
 {
-  "name": "backend",
+  "name": "tecspacs-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Tecspacs Backend API with Auth0 authentication and AI integration",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["tecspacs", "api", "auth0", "mongodb", "ai"],
+  "author": "Tecspacs Team",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "mongoose": "^8.16.5",
-    "node-fetch": "^3.3.2"
+    "express-jwt": "^8.5.1",
+    "jwks-rsa": "^3.2.0",
+    "mongodb": "^6.18.0",
+    "mongoose": "^8.16.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
   }
 }

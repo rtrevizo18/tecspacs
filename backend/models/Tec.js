@@ -1,9 +1,32 @@
-// models/Tec.js --Eg
 const mongoose = require('mongoose');
-const TecSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  language: String,
-  tag: String,
-  user: String, // Add whatever fields are required by business logic
+
+const tecSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  language: {
+    type: String,
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  tags: [{
+    type: String
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, {
+  timestamps: true
 });
-module.exports = mongoose.model('Tec', TecSchema);
+
+module.exports = mongoose.model('Tec', tecSchema); 

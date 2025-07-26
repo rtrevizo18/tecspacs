@@ -1,13 +1,27 @@
-// routes/tecs.js
 const express = require('express');
 const router = express.Router();
-const tc = require('../controllers/tecController');
+const { checkJwt, populateUser } = require('../middleware/auth');
+const { 
+  getAllTecs, 
+  createTec, 
+  getTecById, 
+  deleteTec, 
+  improveTec, 
+  summarizeTec 
+} = require('../controllers/tecController');
 
-router.post('/', tc.createTec);             // Create
-router.get('/', tc.getPublicTecs);          // Read with pagination/filter
-router.get('/user/:userId', tc.getUserTecs);    // Get user's private tecs
-router.delete('/:id', tc.deleteTec);        // Delete
-router.post('/:id/summarize', tc.summarizeTec); // Gemini AI endpoint
-router.post('/:id/improve', tc.improveTec);     // Gemini AI improve endpoint
+// Public routes
+router.get('/', getAllTecs);
 
-module.exports = router;
+// Protected routes
+router.post('/', checkJwt, populateUser, createTec);
+
+// Public routes (must come after specific routes)
+router.get('/:id', getTecById);
+
+// Protected routes for AI features and deletion
+router.delete('/:id', checkJwt, populateUser, deleteTec);
+router.post('/:id/summarize', checkJwt, populateUser, summarizeTec);
+router.post('/:id/improve', checkJwt, populateUser, improveTec);
+
+module.exports = router; 

@@ -1,65 +1,135 @@
-// controllers/tecController.js
 const Tec = require('../models/Tec');
+const User = require('../models/User');
+const { isValidObjectId } = require('../utils/objectIdValidation');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-exports.createTec = async (req, res) => {
+// Get all tecs
+const getAllTecs = async (req, res) => {
   try {
-    const tec = await Tec.create(req.body);
-    res.status(201).json(tec);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-};
-
-exports.getPublicTecs = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, language, tag } = req.query;
-    const query = {};
-    if (language) query.language = language;
-    if (tag) query.tag = tag;
-    const tecs = await Tec.find(query)
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+    const tecs = await Tec.find().populate('createdBy', 'username');
     res.json(tecs);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching tecs', error: error.message });
   }
 };
 
-exports.getUserTecs = async (req, res) => {
+// Create a new tec
+const createTec = async (req, res) => {
   try {
-    const { page = 1, limit = 10, language, tag } = req.query;
-    const { userId } = req.params; // or req.user.id if using auth middleware
+    const { title, description, language, content, tags } = req.body;
     
-    const query = { user: userId };
-    if (language) query.language = language;
-    if (tag) query.tag = tag;
+    // Find or create user based on Auth0 ID
+    let user = await User.findOne({ auth0Id: req.user.auth0Id });
     
-    const tecs = await Tec.find(query)
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-    res.json(tecs);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found. Please complete your profile first.' });
+    }
+
+    const tec = new Tec({
+      title,
+      description,
+      language,
+      content,
+      tags,
+      createdBy: user._id
+    });
+
+    const savedTec = await tec.save();
+    
+    // Add tec to user's tecs array
+    user.tecs.push(savedTec._id);
+    await user.save();
+
+    res.status(201).json(savedTec);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating tec', error: error.message });
   }
 };
 
-exports.deleteTec = async (req, res) => {
+// Get tec by ID
+const getTecById = async (req, res) => {
   try {
-    await Tec.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Deleted' });
-  } catch (e) {
-    res.status(404).json({ error: e.message });
+    const { id } = req.params;
+    
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ 
+        message: 'Invalid TEC ID format',
+        error: 'ObjectId must be a 24-character hex string',
+        receivedId: id,
+        example: '507f1f77bcf86cd799439011'
+      });
+    }
+    
+    const tec = await Tec.findById(id).populate('createdBy', 'username');
+    
+    if (!tec) {
+      return res.status(404).json({ 
+        message: 'TEC not found',
+        error: 'No TEC found with the provided ID',
+        receivedId: id
+      });
+    }
+    
+    res.json(tec);
+  } catch (error) {
+    console.error('Error fetching TEC by ID:', error);
+    res.status(500).json({ 
+      message: 'Error fetching TEC', 
+      error: error.message,
+      receivedId: req.params.id
+    });
+  }
+};
+
+// Delete tec
+const deleteTec = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ 
+        message: 'Invalid TEC ID format',
+        error: 'ObjectId must be a 24-character hex string',
+        receivedId: id
+      });
+    }
+    
+    const tec = await Tec.findByIdAndDelete(id);
+    
+    if (!tec) {
+      return res.status(404).json({ 
+        message: 'TEC not found',
+        error: 'No TEC found with the provided ID',
+        receivedId: id
+      });
+    }
+    
+    res.json({ message: 'TEC deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting TEC', error: error.message });
   }
 };
 
 // Gemini AI integration for improving tecs
-exports.improveTec = async (req, res) => {
+const improveTec = async (req, res) => {
   try {
-    const tec = await Tec.findById(req.params.id);
+    const { id } = req.params;
+    
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ 
+        message: 'Invalid TEC ID format',
+        error: 'ObjectId must be a 24-character hex string',
+        receivedId: id
+      });
+    }
+    
+    const tec = await Tec.findById(id);
     if (!tec) {
       return res.status(404).json({ error: 'Tec not found' });
     }
@@ -68,9 +138,11 @@ exports.improveTec = async (req, res) => {
     
     const prompt = `Please suggest improvements for this technical snippet:
     
-    Name: ${tec.name}
-    Language: ${tec.language || 'Not specified'}
-    Tag: ${tec.tag || 'Not specified'}
+    Title: ${tec.title}
+    Description: ${tec.description}
+    Language: ${tec.language}
+    Content: ${tec.content}
+    Tags: ${tec.tags ? tec.tags.join(', ') : 'None'}
     
     Provide 3-5 specific suggestions for improving this code or technical approach, focusing on:
     - Performance optimizations
@@ -86,38 +158,48 @@ exports.improveTec = async (req, res) => {
     res.json({ 
       improvements,
       tecId: tec._id,
-      tecName: tec.name 
+      tecTitle: tec.title 
     });
-  } catch (e) {
-    console.error('Gemini API Error:', e.message);
+  } catch (error) {
+    console.error('Gemini API Error:', error.message);
     res.status(500).json({ 
       error: 'Failed to generate improvements',
-      details: e.message 
+      details: error.message 
     });
   }
 };
 
 // Gemini AI integration for summarizing tecs
-exports.summarizeTec = async (req, res) => {
+const summarizeTec = async (req, res) => {
   try {
-    const tec = await Tec.findById(req.params.id);
+    const { id } = req.params;
+    
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ 
+        message: 'Invalid TEC ID format',
+        error: 'ObjectId must be a 24-character hex string',
+        receivedId: id
+      });
+    }
+    
+    const tec = await Tec.findById(id);
     if (!tec) {
       return res.status(404).json({ error: 'Tec not found' });
     }
 
-    // Initialize the model
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    // Create a prompt based on the tec data
     const prompt = `Please provide a concise summary of this technical snippet:
     
-    Name: ${tec.name}
-    Language: ${tec.language || 'Not specified'}
-    Tag: ${tec.tag || 'Not specified'}
+    Title: ${tec.title}
+    Description: ${tec.description}
+    Language: ${tec.language}
+    Content: ${tec.content}
+    Tags: ${tec.tags ? tec.tags.join(', ') : 'None'}
     
     Please summarize what this appears to be and its potential use case in 2-3 sentences.`;
 
-    // Generate content
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const summary = response.text();
@@ -125,13 +207,22 @@ exports.summarizeTec = async (req, res) => {
     res.json({ 
       summary,
       tecId: tec._id,
-      tecName: tec.name 
+      tecTitle: tec.title 
     });
-  } catch (e) {
-    console.error('Gemini API Error:', e.message);
+  } catch (error) {
+    console.error('Gemini API Error:', error.message);
     res.status(500).json({ 
       error: 'Failed to generate summary',
-      details: e.message 
+      details: error.message 
     });
   }
 };
+
+module.exports = {
+  getAllTecs,
+  createTec,
+  getTecById,
+  deleteTec,
+  improveTec,
+  summarizeTec
+}; 

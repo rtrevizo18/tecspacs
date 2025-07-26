@@ -11,10 +11,6 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Database
-*.db
-*.sqlite
-
 # Logs
 logs
 *.log
@@ -28,24 +24,32 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
 # Output of 'npm pack'
 *.tgz
 
 # Yarn Integrity file
 .yarn-integrity
 
-# Optional npm cache directory
-.npm
+# dotenv environment variables file
+.env
 
-# Optional eslint cache
-.eslintcache
-
-# IDEs and editors
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # OS generated files
 .DS_Store
@@ -54,4 +58,4 @@ coverage/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+Thumbs.db 
