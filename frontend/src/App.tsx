@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import Dashboard from "./pages/Dashboard";
 import ViewSnippet from "./pages/ViewSnippet";
+import UserProfile from "./pages/UserProfile";
 import AuthCarousel from "./components/AuthCarousel";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/view/:id" element={<ViewSnippet />} />
+          <Route path="/user/:uid" element={<UserProfile />} />
           <Route path="/auth" element={<AuthCarousel />} />
           <Route path="/login" element={<AuthCarousel />} />
           <Route path="/register" element={<AuthCarousel />} />
