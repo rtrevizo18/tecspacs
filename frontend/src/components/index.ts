@@ -6,3 +6,5 @@ export { default as OutlineButton } from './OutlineButton';
 export { default as Navigation } from './Navigation';
 export { default as SnippetCard } from './SnippetCard';
 export { default as Sidebar } from './Sidebar';
+export { default as NotebookInput } from './NotebookInput';
+export { default as AuthCarousel } from './AuthCarousel';

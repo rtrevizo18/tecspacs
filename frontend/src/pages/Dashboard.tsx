@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Snippet Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-6">
             {mockSnippets
               .filter((snippet) => snippet.isPublic)
               .map((snippet) => {
