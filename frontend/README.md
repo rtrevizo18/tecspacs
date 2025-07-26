@@ -1,35 +1,3 @@
-# Tecspacs Frontend MVP
-
-A personal + collaborative snippet/package manager for developers with a sticky notes aesthetic.
-
-## Features Implemented (Phase 1 - Core MVP)
-
-✅ **Component Library Setup**
-- StickyNote: Customizable sticky note cards with different variants and sizes
-- CodeBox: Syntax-highlighted code display with react-syntax-highlighter
-- UnderlineInput: Clean input fields with underline styling
-- LanguageTag: Color-coded tags for programming languages
-- OutlineButton: Consistent button styling throughout the app
-
-✅ **Dashboard with Dummy Data**
-- Grid layout displaying code snippets as sticky note cards
-- Each snippet shows title, language, author, creation date, and preview
-- Sidebar with navigation and popular tags
-- Sample data with 10+ realistic code snippets across different languages
-
-✅ **View Snippet Page**
-- Large sticky note layout for detailed snippet view
-- Full syntax highlighting for code display
-- Author information, tags, and metadata
-- Action buttons for edit, delete, fork (UI only)
-- Related snippets section
-
-✅ **Basic Navigation**
-- Fixed navigation bar with search functionality
-- Logo linking to dashboard
-- User avatar display (for logged-in state simulation)
-- Clean sticky note aesthetic throughout
-
 ## Tech Stack
 
 - **React 18** with TypeScript
@@ -83,18 +51,5 @@ npm start
 npm run build
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000).
+The app will be available at [http://localhost:3000](http://localhost:3000) or other ports if alr in use.
 
-## Sample Data
-
-The app includes realistic mock data with:
-- 10 code snippets across JavaScript, Python, TypeScript, CSS, SQL, etc.
-- 4 mock users with different specialties
-- Various snippet complexities and use cases
-- Mix of public/private snippets for testing
-
-## Next Steps (Future Phases)
-
-- **Phase 2**: New snippet creation, editing, search and filtering
-- **Phase 3**: Authentication UI, user profiles, save/unsave functionality
-- **Enhanced Features**: Responsive design, virtual scrolling, advanced search
