@@ -44,14 +44,17 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
               {authorInitial}
             </div>
           </Link>
-          <Link to={`/user/${snippet.authorId}`} className="font-bold hover:underline">
+          <Link
+            to={`/user/${snippet.authorId}`}
+            className="font-bold hover:underline"
+          >
             {authorName}
           </Link>
           <span>{formatDistanceToNow(snippet.createdAt)} ago</span>
         </div>
 
-        <button className="text-text-accent hover:text-red-500 text-lg">
-          ♡
+        <button className="text-text-accent hover:opacity-80 transition-opacity">
+          <img src="/bookmark.png" alt="Bookmark" className="w-5 h-5" />
         </button>
       </div>
       <div className="mb-3 flex flex-wrap gap-2">

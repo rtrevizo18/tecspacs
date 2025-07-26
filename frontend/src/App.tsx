@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import ViewSnippet from "./pages/ViewSnippet";
 import UserProfile from "./pages/UserProfile";
 import NewSnippet from "./pages/NewSnippet";
+import EditSnippet from "./pages/EditSnippet";
 import AuthCarousel from "./components/AuthCarousel";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="/view/:id" element={<ViewSnippet />} />
           <Route path="/user/:uid" element={<UserProfile />} />
           <Route path="/new" element={<NewSnippet />} />
+          <Route path="/edit/:id" element={<EditSnippet />} />
           <Route path="/auth" element={<AuthCarousel />} />
           <Route path="/login" element={<AuthCarousel />} />
           <Route path="/register" element={<AuthCarousel />} />

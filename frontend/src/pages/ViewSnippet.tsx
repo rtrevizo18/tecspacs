@@ -1,16 +1,18 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import StickyNote from "../components/StickyNote";
 import CodeBox from "../components/CodeBox";
 import LanguageTag from "../components/LanguageTag";
 import OutlineButton from "../components/OutlineButton";
 import { getSnippetById, getCurrentUser } from "../data/mockData";
+import DashedLine from "../components/DashedLine";
 
 const ViewSnippet: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const snippet = id ? getSnippetById(id) : null;
   const currentUser = getCurrentUser();
+  const navigate = useNavigate();
 
   if (!snippet) {
     return (
@@ -33,66 +35,73 @@ const ViewSnippet: React.FC = () => {
   return (
     <div className="pt-20 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <StickyNote variant="default" className="mb-6">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-text-primary mb-2">
-                {snippet.title}
-              </h1>
-              <div className="flex items-center gap-4 text-sm text-text-accent">
-                <span>by {snippet.authorName}</span>
-                <span>•</span>
-                <span>{formatDistanceToNow(snippet.createdAt)} ago</span>
-                {!snippet.isPublic && (
-                  <>
-                    <span>•</span>
-                    <span className="text-red-600 font-medium">Private</span>
-                  </>
-                )}
+        {/* User Info Row - Outside sticky note */}
+        <div className="flex items-center justify-between text-sm text-text-accent mb-2">
+          <div className="flex items-center gap-2">
+            <Link to={`/user/${snippet.authorId}`}>
+              <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
+                {snippet.authorName.charAt(0).toUpperCase()}
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                className={`text-xl ${
-                  isSaved
-                    ? "text-red-500"
-                    : "text-text-accent hover:text-red-500"
-                }`}
-              >
-                {isSaved ? "❤️" : "♡"}
-              </button>
-              {isOwner && (
-                <>
-                  <OutlineButton size="small" onClick={() => {}}>
-                    Edit
-                  </OutlineButton>
-                  <OutlineButton
-                    size="small"
-                    variant="danger"
-                    onClick={() => {}}
-                  >
-                    Delete
-                  </OutlineButton>
-                </>
-              )}
-              <OutlineButton
-                size="small"
-                variant="secondary"
-                onClick={() => {}}
-              >
-                Fork
-              </OutlineButton>
-            </div>
+            </Link>
+            <Link
+              to={`/user/${snippet.authorId}`}
+              className="font-bold hover:underline"
+            >
+              {snippet.authorName}
+            </Link>
+            <span>{formatDistanceToNow(snippet.createdAt)} ago</span>
+            {!snippet.isPublic && (
+              <>
+                <span>•</span>
+                <span className="text-red-600 font-medium">Private</span>
+              </>
+            )}
           </div>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {snippet.tags.map((tag) => (
-              <LanguageTag key={tag} language={tag.trim()} />
-            ))}
+          {/* Heart and Action Buttons - Outside sticky note */}
+          <div className="flex items-center gap-2">
+            <button
+              className={`transition-opacity ${
+                isSaved ? "opacity-100" : "opacity-60 hover:opacity-80"
+              }`}
+            >
+              <img 
+                src="/bookmark.png" 
+                alt="Bookmark" 
+                className={`w-6 h-6 ${isSaved ? "filter-none" : "grayscale"}`}
+              />
+            </button>
+            {isOwner && (
+              <>
+                <OutlineButton size="small" onClick={() => navigate(`/edit/${snippet.id}`)}>
+                  Edit
+                </OutlineButton>
+                <OutlineButton size="small" variant="danger" onClick={() => {}}>
+                  Delete
+                </OutlineButton>
+              </>
+            )}
+            <OutlineButton size="small" variant="secondary" onClick={() => {}}>
+              Fork
+            </OutlineButton>
           </div>
+        </div>
+
+        {/* Tags - Outside sticky note */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {snippet.tags.map((tag) => (
+            <LanguageTag key={tag} language={tag.trim()} />
+          ))}
+        </div>
+
+        {/* Main Content - Inside sticky note */}
+        <StickyNote variant="default" className="mb-6">
+          <h1 className="text-2xl font-bold text-text-primary mb-4">
+            {snippet.title}
+          </h1>
+
+          {/* Description if available */}
+          {snippet.description && <DashedLine text={snippet.description} />}
 
           {/* Code */}
           <div className="mb-4">
@@ -103,7 +112,10 @@ const ViewSnippet: React.FC = () => {
           <div className="flex justify-between items-center text-sm text-text-accent border-t border-pen-black pt-4">
             <div className="flex gap-4">
               <span>👁️ 42 views</span>
-              <span>❤️ 8 saves</span>
+              <span className="flex items-center gap-1">
+                <img src="/bookmark.png" alt="Bookmark" className="w-4 h-4" />
+                8 saves
+              </span>
               <span>🍴 3 forks</span>
             </div>
             <div>Last updated {formatDistanceToNow(snippet.updatedAt)} ago</div>

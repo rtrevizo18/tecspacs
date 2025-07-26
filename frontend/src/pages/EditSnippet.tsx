@@ -1,14 +1,16 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import StickyNote from "../components/StickyNote";
 import NotebookInput from "../components/NotebookInput";
 import OutlineButton from "../components/OutlineButton";
 import LanguageTag from "../components/LanguageTag";
-import { getCurrentUser } from "../data/mockData";
+import { getCurrentUser, getSnippetById } from "../data/mockData";
 
-const NewSnippet: React.FC = () => {
+const EditSnippet: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const currentUser = getCurrentUser();
+  const snippet = id ? getSnippetById(id) : null;
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -29,6 +31,18 @@ const NewSnippet: React.FC = () => {
     "example", "utility", "helper", "database", "frontend", "backend"
   ];
 
+  // Pre-populate form with existing snippet data
+  useEffect(() => {
+    if (snippet) {
+      setTitle(snippet.title);
+      setDescription(snippet.description || "");
+      setCode(snippet.code);
+      setLanguage(snippet.language);
+      setTags(snippet.tags);
+      setIsPublic(snippet.isPublic);
+    }
+  }, [snippet]);
+
   const handleAddTag = (tag: string) => {
     if (tag.trim() && !tags.includes(tag.trim())) {
       setTags([...tags, tag.trim()]);
@@ -43,12 +57,12 @@ const NewSnippet: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createSnippet();
+    updateSnippet();
   };
 
-  const createSnippet = () => {
-    if (!currentUser) {
-      alert("Please log in to create snippets");
+  const updateSnippet = () => {
+    if (!currentUser || !snippet) {
+      alert("Unable to update snippet");
       return;
     }
 
@@ -57,31 +71,41 @@ const NewSnippet: React.FC = () => {
       return;
     }
 
-    const newSnippet = {
-      id: Math.random().toString(36).substr(2, 9),
+    const updatedSnippet = {
+      ...snippet,
       title: title.trim(),
       description: description.trim(),
       code: code.trim(),
       language: language.trim(),
       tags: tags,
-      authorId: currentUser.id,
-      authorName: currentUser.name,
-      createdAt: new Date(),
       updatedAt: new Date(),
       isPublic: isPublic
     };
 
-    console.log("New snippet created:", newSnippet);
-    navigate("/");
+    console.log("Snippet updated:", updatedSnippet);
+    navigate(`/view/${snippet.id}`);
   };
 
-  if (!currentUser) {
+  if (!snippet) {
     return (
       <div className="min-h-screen p-4">
         <div className="container mx-auto max-w-4xl pt-20">
           <StickyNote variant="pink" className="text-center">
-            <h1 className="text-2xl font-bold text-pen-black mb-2">Authentication Required</h1>
-            <p className="text-accent">Please log in to create snippets.</p>
+            <h1 className="text-2xl font-bold text-pen-black mb-2">Snippet Not Found</h1>
+            <p className="text-accent">The snippet you're trying to edit doesn't exist.</p>
+          </StickyNote>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser || currentUser.id !== snippet.authorId) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="container mx-auto max-w-4xl pt-20">
+          <StickyNote variant="pink" className="text-center">
+            <h1 className="text-2xl font-bold text-pen-black mb-2">Access Denied</h1>
+            <p className="text-accent">You can only edit your own snippets.</p>
           </StickyNote>
         </div>
       </div>
@@ -92,7 +116,7 @@ const NewSnippet: React.FC = () => {
     <div className="min-h-screen p-4">
       <div className="container mx-auto max-w-4xl pt-20">
         <StickyNote variant="blue" size="large">
-          <h1 className="text-3xl font-bold text-pen-black mb-6">Create New Snippet</h1>
+          <h1 className="text-3xl font-bold text-pen-black mb-6">Edit Snippet</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -249,13 +273,13 @@ const NewSnippet: React.FC = () => {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <OutlineButton variant="primary" size="large" onClick={createSnippet}>
-                Create Snippet
+              <OutlineButton variant="primary" size="large" onClick={updateSnippet}>
+                Update Snippet
               </OutlineButton>
               <OutlineButton 
                 variant="secondary" 
                 size="large" 
-                onClick={() => navigate("/")}
+                onClick={() => navigate(`/view/${snippet.id}`)}
               >
                 Cancel
               </OutlineButton>
@@ -267,4 +291,4 @@ const NewSnippet: React.FC = () => {
   );
 };
 
-export default NewSnippet;
+export default EditSnippet;

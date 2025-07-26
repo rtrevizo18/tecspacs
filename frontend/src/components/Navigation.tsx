@@ -25,7 +25,7 @@ const Navigation: React.FC = () => {
             placeholder="Search snippets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-pen-black rounded-lg bg-white text-text-primary placeholder-text-accent focus:outline-none focus:border-2"
+            className="w-full px-4 py-2 border-2 border-pen-black rounded-lg bg-white text-text-primary placeholder-text-accent focus:outline-none focus:border-pen-black"
           />
         </div>
 

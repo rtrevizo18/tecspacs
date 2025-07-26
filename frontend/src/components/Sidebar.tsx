@@ -10,12 +10,12 @@ const Sidebar: React.FC = () => {
   return (
     <div className="w-80 px-4 py-6 space-y-4 ml-6">
       <h2 className="font-bold text-text-primary mb-3">Navigation</h2>
-      <StickyNote variant="green" size="small">
+      <StickyNote variant="default" size="small">
         <div className="flex items-center justify-between mb-3 gap-2">
           <h3 className="font-bold text-text-primary mb-3">My Snippets</h3>
           <Link to="/new">
             <OutlineButton size="small" onClick={() => {}}>
-              ✨ New Snippet
+              New Snippet
             </OutlineButton>
           </Link>
         </div>

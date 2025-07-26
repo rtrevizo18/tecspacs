@@ -2,12 +2,13 @@ import React from "react";
 
 interface DashedLineProps {
   text: string;
+  className?: string;
 }
 
-const DashedLine: React.FC<DashedLineProps> = ({ text }) => {
+const DashedLine: React.FC<DashedLineProps> = ({ text, className = "" }) => {
   return (
     <div
-      className="text-text-accent text-sm mb-2 relative"
+      className={`text-text-accent text-base mb-2 relative ${className}`}
       style={{
         textDecorationLine: "underline",
         textDecorationStyle: "dashed",

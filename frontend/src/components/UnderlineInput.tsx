@@ -27,7 +27,7 @@ const UnderlineInput: React.FC<UnderlineInputProps> = ({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border-0 border-b-2 border-pen-black bg-transparent px-0 py-2 text-text-primary placeholder-text-accent focus:outline-none focus:border-b-4"
+        className="w-full border-0 border-b-2 border-dashed border-pen-black bg-transparent px-0 py-2 text-text-primary placeholder-text-accent focus:outline-none focus:border-b-4 focus:border-dashed"
       />
     </div>
   );
