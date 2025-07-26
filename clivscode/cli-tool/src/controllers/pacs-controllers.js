@@ -2,6 +2,7 @@ import { StorageManager } from '../util/storage-manager.js';
 import { ErrorHandler } from '../util/error-handler.js';
 import { FileManager } from '../util/file-manager.js';
 import { db } from '../db/db-manager.js';
+import path from 'path'; // Add this import
 
 const getPacAction = async (name, options) => {
   try {
@@ -48,10 +49,45 @@ const getPacAction = async (name, options) => {
     console.log(JSON.stringify(manifest, null, 2));
     console.log('--- End ---\n');
 
+    // Create local 'pacs' directory and copy package contents
+    try {
+      const currentDir = process.cwd();
+      const pacsDir = path.join(currentDir, 'pacs');
+      const packageLocalDir = path.join(pacsDir, pac.name);
+
+      // Ensure pacs directory exists
+      await FileManager.ensureDirectory(pacsDir);
+
+      // Check if package already exists locally
+      if (await FileManager.exists(packageLocalDir)) {
+        console.log(`\nPackage "${pac.name}" already exists in ./pacs/`);
+        console.log(`Overwriting existing package...`);
+        await FileManager.deleteDirectory(packageLocalDir);
+      }
+
+      // Copy the entire package directory to local pacs folder
+      await FileManager.copyDirectory(pac.package_path, packageLocalDir);
+
+      console.log(`\nPackage files copied to: ./pacs/${pac.name}/`);
+
+      // Show what was copied
+      if (manifest.has_content) {
+        console.log(
+          `   - Package content (from: ${manifest.source_path || 'unknown'})`
+        );
+      }
+      console.log(`   - Package manifest (package.json)`);
+    } catch (copyError) {
+      console.log(
+        `\nWarning: Failed to copy package files locally: ${copyError.message}`
+      );
+      console.log('Package information retrieved, but files not copied.');
+    }
+
     // Increment usage count
     db.incrementPackageUsage(name);
 
-    console.log(`Retrieved package "${name}"`);
+    console.log(`\nRetrieved package "${name}"`);
   } catch (error) {
     ErrorHandler.handle(error, 'Get Package');
   }
