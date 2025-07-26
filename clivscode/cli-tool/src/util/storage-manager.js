@@ -221,7 +221,7 @@ export class StorageManager {
       author,
       language,
       category,
-      sourcePath, // Path to folder/file to copy
+      sourcePath,
     } = pac;
     const rollbackTasks = [];
 

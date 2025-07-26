@@ -27,7 +27,7 @@ const getPacAction = async (name, options) => {
 
     // Display package information
     console.log(`\nPackage: ${pac.name}`);
-    console.log(`Version: ${pac.version}`);
+    console.log(`Version: ${pac.version || 'None'}`);
     console.log(`Language: ${pac.language}`);
     console.log(`Category: ${pac.category || 'None'}`);
 
@@ -67,11 +67,6 @@ const createPacAction = async (name, options) => {
     const { version, description, author, language, category, sourcePath } =
       options;
 
-    // Validate required fields
-    if (!version) {
-      throw new Error('Version is required');
-    }
-
     if (!language) {
       throw new Error('Language is required');
     }
@@ -84,7 +79,7 @@ const createPacAction = async (name, options) => {
     // Create the package
     const result = await StorageManager.storePac({
       name: name.trim(),
-      version,
+      version: version || '',
       description: description || '',
       author: author || '',
       language: language.toLowerCase(),
@@ -94,7 +89,7 @@ const createPacAction = async (name, options) => {
 
     console.log(`\nCreated package "${name}"`);
     console.log(`   ID: ${result.id}`);
-    console.log(`   Version: ${version}`);
+    console.log(`   Version: ${version || ''}`);
     console.log(`   Language: ${language}`);
     console.log(`   Category: ${category || 'general'}`);
     console.log(`   Package Path: ${result.packagePath}`);
@@ -173,7 +168,7 @@ const updatePacAction = async (name, options) => {
     const updatedPac = await StorageManager.updatePac(name.trim(), updates);
 
     console.log(`\nUpdated package "${name}"`);
-    console.log(`   Version: ${updatedPac.version}`);
+    console.log(`   Version: ${updatedPac.version || 'None'}`);
     console.log(`   Language: ${updatedPac.language}`);
     console.log(`   Category: ${updatedPac.category || 'None'}`);
 
@@ -197,7 +192,8 @@ const updatePacAction = async (name, options) => {
   }
 };
 
-const deletePacAction = async (name, options) => {
+// Checked
+const deletePacAction = async name => {
   try {
     // Validate input
     if (!name || name.trim() === '') {
@@ -208,26 +204,6 @@ const deletePacAction = async (name, options) => {
     const existingPac = await StorageManager.getPac(name.trim());
     if (!existingPac) {
       throw new Error(`Package "${name}" not found`);
-    }
-
-    // Show confirmation unless force flag is used
-    if (!options.force) {
-      console.log(`\nAre you sure you want to delete package "${name}"?`);
-      console.log(`   Version: ${existingPac.version}`);
-      console.log(`   Language: ${existingPac.language}`);
-      console.log(`   Category: ${existingPac.category || 'None'}`);
-      console.log(`   Package Path: ${existingPac.package_path}`);
-
-      if (existingPac.description) {
-        console.log(`   Description: ${existingPac.description}`);
-      }
-
-      if (existingPac.author) {
-        console.log(`   Author: ${existingPac.author}`);
-      }
-
-      console.log(`\nUse --force flag to skip this confirmation.`);
-      return;
     }
 
     // Delete the package

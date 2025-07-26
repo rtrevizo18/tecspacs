@@ -1,8 +1,9 @@
 import { StorageManager } from '../util/storage-manager.js';
 import { ErrorHandler } from '../util/error-handler.js';
 import { db } from '../db/db-manager.js';
+import clipboard from 'clipboardy';
 
-const getTecAction = async (name, options) => {
+const getTecAction = async name => {
   try {
     // Validate input
     if (!name || name.trim() === '') {
@@ -33,6 +34,8 @@ const getTecAction = async (name, options) => {
     console.log('\n--- Content ---');
     console.log(tec.content);
     console.log('--- End ---\n');
+    await clipboard.write(tec.content);
+    console.log('Copied to clipboard!');
 
     db.incrementSnippetUsage(name);
 
@@ -158,21 +161,6 @@ const deleteTecAction = async (name, options) => {
     const existingTec = await StorageManager.getTec(name.trim());
     if (!existingTec) {
       throw new Error(`Snippet "${name}" not found`);
-    }
-
-    // Show confirmation unless force flag is used
-    if (!options.force) {
-      console.log(`\nAre you sure you want to delete snippet "${name}"?`);
-      console.log(`   Language: ${existingTec.language}`);
-      console.log(`   Category: ${existingTec.category || 'None'}`);
-      console.log(`   File Path: ${existingTec.file_path}`);
-
-      if (existingTec.description) {
-        console.log(`   Description: ${existingTec.description}`);
-      }
-
-      console.log(`\nUse --force flag to skip this confirmation.`);
-      return;
     }
 
     // Delete the snippet

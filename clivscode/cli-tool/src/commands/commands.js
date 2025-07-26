@@ -1,4 +1,12 @@
 import {
+  createPacPrompter,
+  createTecPrompter,
+  deletePacPrompter,
+  deleteTecPrompter,
+  updatePacPrompter,
+  updateTecPrompter,
+} from './prompts.js';
+import {
   getTecAction,
   createTecAction,
   updateTecAction,
@@ -20,11 +28,10 @@ export async function loadCommands(program) {
   program
     .command('create-tec <name>')
     .description('Create a new snippet')
-    .option('-d, --description <description>', 'Snippet description')
-    .requiredOption('-l, --language <language>', 'Programming language')
-    .option('-c, --category <category>', 'Snippet category', 'general')
-    .requiredOption('--content <content>', 'Snippet content')
-    .action(createTecAction);
+    .action(async name => {
+      const answers = await createTecPrompter();
+      await createTecAction(name, answers);
+    });
 
   program
     .command('update-tec <name>')
@@ -33,13 +40,23 @@ export async function loadCommands(program) {
     .option('-l, --language <language>', 'Update programming language')
     .option('-c, --category <category>', 'Update category')
     .option('--content <content>', 'Update content')
-    .action(updateTecAction);
+    .action(async name => {
+      const answers = await updateTecPrompter();
+      await updateTecAction(name, answers);
+    });
 
   program
     .command('delete-tec <name>')
     .description('Delete a snippet')
     .option('-f, --force', 'Skip confirmation prompt')
-    .action(deleteTecAction);
+    .action(async name => {
+      const willDelete = await deleteTecPrompter();
+      if (willDelete) {
+        await deleteTecAction(name);
+      } else {
+        console.log('Operation canceled');
+      }
+    });
 
   program
     .command('get-pac <name>')
@@ -49,27 +66,29 @@ export async function loadCommands(program) {
   program
     .command('create-pac <name>')
     .description('Create a new package')
-    .requiredOption('-v, --version <version>', 'Package version')
-    .option('-d, --description <description>', 'Package description')
-    .option('-a, --author <author>', 'Package author')
-    .requiredOption('-l, --language <language>', 'Programming language')
-    .option('-c, --category <category>', 'Package category', 'general')
-    .option('-s, --source-path <path>', 'Path to source files/folder to copy')
-    .action(createPacAction);
+    .action(async name => {
+      const answers = await createPacPrompter();
+      await createPacAction(name, answers);
+    });
 
   program
     .command('update-pac <name>')
     .description('Update an existing package')
-    .option('-v, --version <version>', 'Update version')
-    .option('-d, --description <description>', 'Update description')
-    .option('-a, --author <author>', 'Update author')
-    .option('-l, --language <language>', 'Update programming language')
-    .option('-c, --category <category>', 'Update category')
-    .action(updatePacAction);
+    .action(async name => {
+      const answers = await updatePacPrompter();
+      await updatePacAction(name, answers);
+    });
 
   program
     .command('delete-pac <name>')
     .description('Delete a package')
     .option('-f, --force', 'Skip confirmation prompt')
-    .action(deletePacAction);
+    .action(async name => {
+      const willDelete = await deletePacPrompter();
+      if (willDelete) {
+        await deletePacAction(name);
+      } else {
+        console.log('Operation canceled');
+      }
+    });
 }
