@@ -14,12 +14,13 @@ export class DatabaseManager {
   async initialize() {
     if (this.isInitialized) return;
 
-    try {
-      const paths = envPaths('tcspcs');
-      const dbPath = path.join(paths.data, 'tcspcs.db');
+    const paths = envPaths('tcspcs');
+    const dbDirectory = path.join(paths.data, 'db');
+    const dbPath = path.join(dbDirectory, 'tcspcs.db');
 
+    try {
       // Ensure data directory exists
-      await FileManager.ensureDirectory(paths.data);
+      await FileManager.ensureDirectory(dbDirectory);
 
       // Create database connection
       this.db = new Database(dbPath);
@@ -31,6 +32,7 @@ export class DatabaseManager {
       await this.createTables();
 
       this.isInitialized = true;
+      console.log('Database connection successful!');
     } catch (error) {
       throw new FileSystemError(
         `Failed to initialize database: ${error.message}`,
@@ -142,6 +144,17 @@ export class DatabaseManager {
   `);
 
     const result = stmt.run(...values);
+    return result.changes > 0;
+  }
+
+  // Add this method after incrementPackageUsage
+  incrementSnippetUsage(name) {
+    const stmt = this.db.prepare(`
+    UPDATE snippets 
+    SET usage_count = usage_count + 1 
+    WHERE name = ?
+  `);
+    const result = stmt.run(name);
     return result.changes > 0;
   }
 

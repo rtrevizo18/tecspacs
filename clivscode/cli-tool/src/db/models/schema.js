@@ -21,7 +21,7 @@ export const SCHEMAS = [
       category TEXT,
       usage_count INTEGER DEFAULT 0,
       package_path TEXT NOT NULL, -- Path to package directory
-      manifest_path TEXT NOT NULL, -- Path to package.json/manifest
+      manifest_path TEXT NOT NULL -- Path to package.json/manifest
     )
   `,
   `CREATE INDEX IF NOT EXISTS idx_snippets_name ON snippets(name);`,

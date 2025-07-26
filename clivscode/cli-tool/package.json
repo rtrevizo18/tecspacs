@@ -18,7 +18,7 @@
     "better-sqlite3": "^12.2.0",
     "commander": "^14.0.0",
     "env-paths": "^3.0.0",
-    "node": "^20.19.4"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "eslint": "^9.32.0",
