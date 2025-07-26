@@ -69,72 +69,231 @@ export class DatabaseManager {
   }
 
   // Project methods
-  createProject(name, projectPath, template) {
+  createSnippet(name, description, language, category, filePath) {
     const stmt = this.db.prepare(`
-      INSERT INTO projects (name, path, template)
-      VALUES (?, ?, ?)
+      INSERT INTO snippets (name, description, language, category, file_path)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     try {
-      const result = stmt.run(name, projectPath, template);
+      const result = stmt.run(name, description, language, category, filePath);
+      return result.lastInsertRowid;
+    } catch (error) {
+      if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        throw new FileSystemError(`Snippet "${name}" already exists`, filePath);
+      }
+      throw error;
+    }
+  }
+
+  getSnippet(name) {
+    const stmt = this.db.prepare('SELECT * FROM snippets WHERE name = ?');
+    return stmt.get(name);
+  }
+
+  getAllSnippets() {
+    const stmt = this.db.prepare(`
+    SELECT * FROM snippets 
+    ORDER BY usage_count DESC, name ASC
+  `);
+    return stmt.all();
+  }
+
+  // Remove timestamp references from getSnippetsByLanguage
+  getSnippetsByLanguage(language) {
+    const stmt = this.db.prepare(`
+    SELECT * FROM snippets 
+    WHERE language = ? 
+    ORDER BY usage_count DESC, name ASC
+  `);
+    return stmt.all(language);
+  }
+
+  // Remove timestamp references from getSnippetsByCategory
+  getSnippetsByCategory(category) {
+    const stmt = this.db.prepare(`
+    SELECT * FROM snippets 
+    WHERE category = ? 
+    ORDER BY usage_count DESC, name ASC
+  `);
+    return stmt.all(category);
+  }
+
+  // Safer updateSnippet method
+  updateSnippet(name, updates) {
+    const validFields = ['description', 'language', 'category', 'file_path'];
+    const updateFields = Object.keys(updates).filter(key =>
+      validFields.includes(key)
+    );
+
+    if (updateFields.length === 0) {
+      throw new Error('No valid fields to update');
+    }
+
+    // Build parameterized query safely
+    const setClause = updateFields.map(field => `${field} = ?`).join(', ');
+    const values = updateFields.map(field => updates[field]);
+    values.push(name); // Add name parameter at the end
+
+    const stmt = this.db.prepare(`
+    UPDATE snippets 
+    SET ${setClause}
+    WHERE name = ?
+  `);
+
+    const result = stmt.run(...values);
+    return result.changes > 0;
+  }
+
+  incrementPackageUsage(name) {
+    const stmt = this.db.prepare(`
+    UPDATE packages 
+    SET usage_count = usage_count + 1 
+    WHERE name = ?
+  `);
+    const result = stmt.run(name);
+    return result.changes > 0;
+  }
+
+  deleteSnippet(name) {
+    const stmt = this.db.prepare('DELETE FROM snippets WHERE name = ?');
+    const result = stmt.run(name);
+    return result.changes > 0;
+  }
+
+  // Package methods
+  createPackage(
+    name,
+    version,
+    description,
+    author,
+    language,
+    category,
+    packagePath,
+    manifestPath
+  ) {
+    const stmt = this.db.prepare(`
+      INSERT INTO packages (name, version, description, author, language, category, package_path, manifest_path)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    try {
+      const result = stmt.run(
+        name,
+        version,
+        description,
+        author,
+        language,
+        category,
+        packagePath,
+        manifestPath
+      );
       return result.lastInsertRowid;
     } catch (error) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
         throw new FileSystemError(
-          `Project "${name}" already exists`,
-          projectPath
+          `Package "${name}" already exists`,
+          packagePath
         );
       }
       throw error;
     }
   }
 
-  getProject(name) {
-    const stmt = this.db.prepare('SELECT * FROM projects WHERE name = ?');
+  getPackage(name) {
+    const stmt = this.db.prepare('SELECT * FROM packages WHERE name = ?');
     return stmt.get(name);
   }
 
-  getAllProjects() {
-    const stmt = this.db.prepare(
-      'SELECT * FROM projects ORDER BY created_at DESC'
-    );
+  // Update getAllPackages to sort by usage
+  getAllPackages() {
+    const stmt = this.db.prepare(`
+    SELECT * FROM packages 
+    ORDER BY usage_count DESC, name ASC
+  `);
     return stmt.all();
   }
 
-  deleteProject(name) {
-    const stmt = this.db.prepare('DELETE FROM projects WHERE name = ?');
+  // Update getPackagesByLanguage to sort by usage
+  getPackagesByLanguage(language) {
+    const stmt = this.db.prepare(`
+    SELECT * FROM packages 
+    WHERE language = ? 
+    ORDER BY usage_count DESC, name ASC
+  `);
+    return stmt.all(language);
+  }
+
+  // Update getPackagesByCategory to sort by usage
+  getPackagesByCategory(category) {
+    const stmt = this.db.prepare(`
+    SELECT * FROM packages 
+    WHERE category = ? 
+    ORDER BY usage_count DESC, name ASC
+  `);
+    return stmt.all(category);
+  }
+
+  // Add to updatePackage validFields if you want to allow manual usage_count updates
+  updatePackage(name, updates) {
+    const validFields = [
+      'version',
+      'description',
+      'author',
+      'language',
+      'category',
+      'usage_count', // Added usage_count
+      'package_path',
+      'manifest_path',
+    ];
+
+    const updateFields = Object.keys(updates).filter(key =>
+      validFields.includes(key)
+    );
+
+    if (updateFields.length === 0) {
+      throw new Error('No valid fields to update');
+    }
+
+    const setClause = updateFields.map(field => `${field} = ?`).join(', ');
+    const values = updateFields.map(field => updates[field]);
+    values.push(name);
+
+    const stmt = this.db.prepare(`
+    UPDATE packages 
+    SET ${setClause}
+    WHERE name = ?
+  `);
+
+    const result = stmt.run(...values);
+    return result.changes > 0;
+  }
+
+  deletePackage(name) {
+    const stmt = this.db.prepare('DELETE FROM packages WHERE name = ?');
     const result = stmt.run(name);
     return result.changes > 0;
   }
 
-  // Config methods
-  setConfig(projectId, key, value) {
+  // Remove timestamp references from searchSnippets
+  searchSnippets(query) {
     const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO configs (project_id, key, value)
-      VALUES (?, ?, ?)
-    `);
-    return stmt.run(projectId, key, value);
+    SELECT * FROM snippets 
+    WHERE name LIKE ? OR description LIKE ? OR category LIKE ?
+    ORDER BY usage_count DESC, name ASC
+  `);
+    const searchTerm = `%${query}%`;
+    return stmt.all(searchTerm, searchTerm, searchTerm);
   }
 
-  getConfig(projectId, key) {
+  searchPackages(query) {
     const stmt = this.db.prepare(`
-      SELECT value FROM configs 
-      WHERE project_id = ? AND key = ?
-    `);
-    const result = stmt.get(projectId, key);
-    return result?.value;
-  }
-
-  getProjectConfigs(projectId) {
-    const stmt = this.db.prepare(`
-      SELECT key, value FROM configs 
-      WHERE project_id = ?
-    `);
-    const configs = stmt.all(projectId);
-    return configs.reduce((acc, { key, value }) => {
-      acc[key] = value;
-      return acc;
-    }, {});
+    SELECT * FROM packages 
+    WHERE name LIKE ? OR description LIKE ? OR category LIKE ? OR author LIKE ?
+    ORDER BY usage_count DESC, name ASC
+  `);
+    const searchTerm = `%${query}%`;
+    return stmt.all(searchTerm, searchTerm, searchTerm, searchTerm);
   }
 
   // Transaction support
