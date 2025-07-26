@@ -5,16 +5,26 @@ import StickyNote from "../components/StickyNote";
 import CodeBox from "../components/CodeBox";
 import LanguageTag from "../components/LanguageTag";
 import OutlineButton from "../components/OutlineButton";
-import { getSnippetById, getCurrentUser } from "../data/mockData";
+import { getSnippetById, getCurrentUser, getTECById, getUserById } from "../data/mockData";
+import { TEC, Snippet } from "../types";
 import DashedLine from "../components/DashedLine";
 
 const ViewSnippet: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const snippet = id ? getSnippetById(id) : null;
+  const tec = id ? getTECById(id) : null;
   const currentUser = getCurrentUser();
   const navigate = useNavigate();
+  
+  // Determine what type of content we're viewing
+  const content = snippet || tec;
+  const isLegacySnippet = !!snippet;
+  const isTEC = !!tec;
+  
+  // Look up author for TECs
+  const tecAuthor = isTEC ? getUserById((content as TEC).author) : null;
 
-  if (!snippet) {
+  if (!content) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
         <StickyNote variant="pink">
@@ -29,8 +39,11 @@ const ViewSnippet: React.FC = () => {
     );
   }
 
-  const isOwner = currentUser && currentUser.id === snippet.authorId;
-  const isSaved = currentUser && currentUser.savedSnippets.includes(snippet.id);
+  const isOwner = currentUser && (
+    (isLegacySnippet && (currentUser.id === (content as Snippet).authorId || currentUser.auth0Id === (content as Snippet).authorId)) ||
+    (isTEC && (currentUser.id === (content as TEC).author || currentUser.auth0Id === (content as TEC).author))
+  );
+  const isSaved = currentUser && isLegacySnippet && currentUser.savedSnippets?.includes((content as Snippet).id);
 
   return (
     <div className="pt-20 min-h-screen">
@@ -38,19 +51,19 @@ const ViewSnippet: React.FC = () => {
         {/* User Info Row - Outside sticky note */}
         <div className="flex items-center justify-between text-sm text-text-accent mb-2">
           <div className="flex items-center gap-2">
-            <Link to={`/user/${snippet.authorId}`}>
+            <Link to={`/user/${isLegacySnippet ? (content as Snippet).authorId : (content as TEC).author}`}>
               <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
-                {snippet.authorName.charAt(0).toUpperCase()}
+                {isLegacySnippet ? (content as Snippet).authorName.charAt(0).toUpperCase() : (tecAuthor?.name.charAt(0).toUpperCase() || 'U')}
               </div>
             </Link>
             <Link
-              to={`/user/${snippet.authorId}`}
+              to={`/user/${isLegacySnippet ? (content as Snippet).authorId : (content as TEC).author}`}
               className="font-bold hover:underline"
             >
-              {snippet.authorName}
+              {isLegacySnippet ? (content as Snippet).authorName : (tecAuthor?.name || 'Unknown')}
             </Link>
-            <span>{formatDistanceToNow(snippet.createdAt)} ago</span>
-            {!snippet.isPublic && (
+            <span>{formatDistanceToNow(isLegacySnippet ? (content as Snippet).createdAt : new Date((content as TEC).createdAt))} ago</span>
+            {((isLegacySnippet && !(content as Snippet).isPublic) || (isTEC && (content as TEC).isPublic === false)) && (
               <>
                 <span>•</span>
                 <span className="text-red-600 font-medium">Private</span>
@@ -73,7 +86,7 @@ const ViewSnippet: React.FC = () => {
             </button>
             {isOwner && (
               <>
-                <OutlineButton size="small" onClick={() => navigate(`/edit/${snippet.id}`)}>
+                <OutlineButton size="small" onClick={() => navigate(`/edit/${isLegacySnippet ? (content as Snippet).id : (content as TEC)._id}`)}>
                   Edit
                 </OutlineButton>
                 <OutlineButton size="small" variant="danger" onClick={() => {}}>
@@ -89,7 +102,9 @@ const ViewSnippet: React.FC = () => {
 
         {/* Tags - Outside sticky note */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {snippet.tags.map((tag) => (
+          {isLegacySnippet ? (content as Snippet).tags.map((tag) => (
+            <LanguageTag key={tag} language={tag.trim()} />
+          )) : (content as TEC).tags.map((tag) => (
             <LanguageTag key={tag} language={tag.trim()} />
           ))}
         </div>
@@ -97,15 +112,18 @@ const ViewSnippet: React.FC = () => {
         {/* Main Content - Inside sticky note */}
         <StickyNote variant="default" className="mb-6">
           <h1 className="text-2xl font-bold text-text-primary mb-4">
-            {snippet.title}
+            {isLegacySnippet ? (content as Snippet).title : (content as TEC).title}
           </h1>
 
           {/* Description if available */}
-          {snippet.description && <DashedLine text={snippet.description} />}
+          {content.description && <DashedLine text={content.description} />}
 
           {/* Code */}
           <div className="mb-4">
-            <CodeBox code={snippet.code} language={snippet.language} />
+            <CodeBox 
+              code={isLegacySnippet ? (content as Snippet).code : (content as TEC).content} 
+              language={isLegacySnippet ? (content as Snippet).language : (content as TEC).language} 
+            />
           </div>
 
           {/* Stats */}
@@ -118,14 +136,14 @@ const ViewSnippet: React.FC = () => {
               </span>
               <span>🍴 3 forks</span>
             </div>
-            <div>Last updated {formatDistanceToNow(snippet.updatedAt)} ago</div>
+            <div>Last updated {formatDistanceToNow(isLegacySnippet ? (content as Snippet).updatedAt : new Date((content as TEC).updatedAt))} ago</div>
           </div>
         </StickyNote>
 
         {/* Related Snippets */}
         <StickyNote variant="blue" size="small">
           <h3 className="font-bold text-text-primary mb-3">
-            More from {snippet.authorName}
+            More from {isLegacySnippet ? (content as Snippet).authorName : (tecAuthor?.name || 'Unknown')}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">

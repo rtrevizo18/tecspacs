@@ -7,6 +7,7 @@ interface OutlineButtonProps {
   children: React.ReactNode;
   className?: string;
   disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 const OutlineButton: React.FC<OutlineButtonProps> = ({
@@ -15,7 +16,8 @@ const OutlineButton: React.FC<OutlineButtonProps> = ({
   onClick,
   children,
   className = '',
-  disabled = false
+  disabled = false,
+  type = 'button'
 }) => {
   const variantClasses = {
     primary: 'border-pen-black text-text-primary hover:bg-gray-50',
@@ -31,6 +33,7 @@ const OutlineButton: React.FC<OutlineButtonProps> = ({
 
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       className={`

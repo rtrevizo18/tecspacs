@@ -75,7 +75,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
           <DashedLine text={snippet.description} />
 
           {/* Code Preview */}
-          <div className="mt-4 flex-1 bg-white border border-pen-black rounded p-2 overflow-auto">
+          <div className="mt-4 flex-1 bg-white border border-pen-black rounded p-2 overflow-auto notebook-grid">
             <pre className="text-xs font-code text-text-primary whitespace-pre-wrap break-words">
               {truncateCode(snippet.code)}
             </pre>

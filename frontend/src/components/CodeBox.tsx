@@ -11,7 +11,7 @@ interface CodeBoxProps {
 const CodeBox: React.FC<CodeBoxProps> = ({ code, language, editable = false }) => {
   if (editable) {
     return (
-      <div className="border border-pen-black rounded-none bg-white font-code">
+      <div className="border border-pen-black rounded-none bg-white font-code notebook-grid">
         <textarea
           value={code}
           readOnly={!editable}
@@ -23,14 +23,14 @@ const CodeBox: React.FC<CodeBoxProps> = ({ code, language, editable = false }) =
   }
 
   return (
-    <div className="border border-pen-black rounded-none bg-white overflow-hidden">
+    <div className="border border-pen-black rounded-none bg-white overflow-hidden notebook-grid">
       <SyntaxHighlighter
         language={language.toLowerCase()}
         style={oneLight}
         customStyle={{
           margin: 0,
           padding: '1rem',
-          background: 'white',
+          background: 'transparent',
           fontFamily: "'Fira Code', 'Monaco', monospace",
           fontSize: '0.875rem'
         }}

@@ -64,7 +64,7 @@ const NewSnippet: React.FC = () => {
       code: code.trim(),
       language: language.trim(),
       tags: tags,
-      authorId: currentUser.id,
+      authorId: currentUser.id || currentUser.auth0Id,
       authorName: currentUser.name,
       createdAt: new Date(),
       updatedAt: new Date(),

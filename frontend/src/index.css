@@ -20,3 +20,24 @@ body {
 code {
   font-family: 'Fira Code', 'Monaco', monospace;
 }
+
+/* Notebook-style grid background for code areas */
+.notebook-grid {
+  background-color: #ffffff;
+  background-image: 
+    linear-gradient(rgba(180, 180, 180, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 180, 180, 0.2) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+/* Lined notebook style for PAC areas */
+.notebook-lines {
+  background-color: #ffffff;
+  background-image: 
+    repeating-linear-gradient(
+      transparent,
+      transparent 19px,
+      rgba(180, 180, 180, 0.4) 19px,
+      rgba(180, 180, 180, 0.4) 20px
+    );
+}
