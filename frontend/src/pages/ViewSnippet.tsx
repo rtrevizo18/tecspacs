@@ -1,11 +1,11 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import StickyNote from '../components/StickyNote';
-import CodeBox from '../components/CodeBox';
-import LanguageTag from '../components/LanguageTag';
-import OutlineButton from '../components/OutlineButton';
-import { getSnippetById, getCurrentUser } from '../data/mockData';
+import React from "react";
+import { useParams } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import StickyNote from "../components/StickyNote";
+import CodeBox from "../components/CodeBox";
+import LanguageTag from "../components/LanguageTag";
+import OutlineButton from "../components/OutlineButton";
+import { getSnippetById, getCurrentUser } from "../data/mockData";
 
 const ViewSnippet: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,22 +52,36 @@ const ViewSnippet: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <button className={`text-xl ${isSaved ? 'text-red-500' : 'text-text-accent hover:text-red-500'}`}>
-                {isSaved ? '❤️' : '♡'}
+              <button
+                className={`text-xl ${
+                  isSaved
+                    ? "text-red-500"
+                    : "text-text-accent hover:text-red-500"
+                }`}
+              >
+                {isSaved ? "❤️" : "♡"}
               </button>
               {isOwner && (
                 <>
                   <OutlineButton size="small" onClick={() => {}}>
                     Edit
                   </OutlineButton>
-                  <OutlineButton size="small" variant="danger" onClick={() => {}}>
+                  <OutlineButton
+                    size="small"
+                    variant="danger"
+                    onClick={() => {}}
+                  >
                     Delete
                   </OutlineButton>
                 </>
               )}
-              <OutlineButton size="small" variant="secondary" onClick={() => {}}>
+              <OutlineButton
+                size="small"
+                variant="secondary"
+                onClick={() => {}}
+              >
                 Fork
               </OutlineButton>
             </div>
@@ -75,23 +89,14 @@ const ViewSnippet: React.FC = () => {
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-6">
-            <LanguageTag language={snippet.language} />
-            {snippet.tags.map(tag => (
-              <span 
-                key={tag}
-                className="px-2 py-1 bg-white border border-pen-black rounded text-xs text-text-accent"
-              >
-                #{tag}
-              </span>
+            {snippet.tags.map((tag) => (
+              <LanguageTag key={tag} language={tag.trim()} />
             ))}
           </div>
 
           {/* Code */}
           <div className="mb-4">
-            <CodeBox 
-              code={snippet.code} 
-              language={snippet.language} 
-            />
+            <CodeBox code={snippet.code} language={snippet.language} />
           </div>
 
           {/* Stats */}
@@ -101,9 +106,7 @@ const ViewSnippet: React.FC = () => {
               <span>❤️ 8 saves</span>
               <span>🍴 3 forks</span>
             </div>
-            <div>
-              Last updated {formatDistanceToNow(snippet.updatedAt)} ago
-            </div>
+            <div>Last updated {formatDistanceToNow(snippet.updatedAt)} ago</div>
           </div>
         </StickyNote>
 
@@ -114,15 +117,21 @@ const ViewSnippet: React.FC = () => {
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-text-primary">React Custom Hook for API</span>
+              <span className="text-text-primary">
+                React Custom Hook for API
+              </span>
               <span className="text-text-accent">2 days ago</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-primary">Express.js Basic Server Setup</span>
+              <span className="text-text-primary">
+                Express.js Basic Server Setup
+              </span>
               <span className="text-text-accent">1 week ago</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-primary">Python List Comprehension Examples</span>
+              <span className="text-text-primary">
+                Python List Comprehension Examples
+              </span>
               <span className="text-text-accent">2 weeks ago</span>
             </div>
           </div>

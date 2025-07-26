@@ -40,6 +40,7 @@ export const mockSnippets: Snippet[] = [
   {
     id: '1',
     title: 'React Functional Component Template',
+    description: 'A basic template for creating functional components in React with TypeScript.',
     code: `import React from 'react';
 
 interface Props {
@@ -68,6 +69,7 @@ export default MyComponent;`,
   {
     id: '2',
     title: 'Python List Comprehension Examples',
+    description: 'Demonstrates various list comprehensions in Python, including basic usage, conditions, and nested loops.',
     code: `# Basic list comprehension
 numbers = [1, 2, 3, 4, 5]
 squares = [x**2 for x in numbers]
@@ -92,6 +94,7 @@ word_lengths = {word: len(word) for word in ['hello', 'world', 'python']}`,
   {
     id: '3',
     title: 'CSS Flexbox Centering',
+    description: 'A simple example of using Flexbox to center an item both vertically and horizontally within a container.',
     code: `.container {
   display: flex;
   justify-content: center;
@@ -115,6 +118,7 @@ word_lengths = {word: len(word) for word in ['hello', 'world', 'python']}`,
   {
     id: '4',
     title: 'JavaScript Array Methods Cheat Sheet',
+    description: 'A quick reference for common JavaScript array methods including map, filter, reduce, find, and more.',
     code: `const numbers = [1, 2, 3, 4, 5];
 
 // Map - transform each element
@@ -143,6 +147,7 @@ const allPositive = numbers.every(n => n > 0);`,
   {
     id: '5',
     title: 'Express.js Basic Server Setup',
+    description: 'A simple Express.js server setup with CORS and basic routes.',
     code: `const express = require('express');
 const cors = require('cors');
 
@@ -177,6 +182,7 @@ app.listen(PORT, () => {
   {
     id: '6',
     title: 'Python Data Analysis Starter',
+    description : 'A basic example of data analysis using pandas, including loading data, handling missing values, and simple visualizations.',
     code: `import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -212,6 +218,7 @@ plt.show()`,
   {
     id: '7',
     title: 'SQL Join Examples',
+    description : 'Demonstrates inner join, left join, and aggregate queries with group by in SQL.',
     code: `-- Inner Join
 SELECT u.name, o.order_date, o.total
 FROM users u
@@ -239,6 +246,7 @@ ORDER BY total_spent DESC;`,
   {
     id: '8',
     title: 'Docker Compose for Development',
+    description: 'A Docker Compose file for setting up a Node.js application with PostgreSQL for development.',
     code: `version: '3.8'
 
 services:
@@ -278,6 +286,7 @@ volumes:
   {
     id: '9',
     title: 'React Custom Hook for API',
+    description: 'A custom React hook for fetching data from an API with loading and error states.',
     code: `import { useState, useEffect } from 'react';
 
 interface UseApiResult<T> {
@@ -327,6 +336,7 @@ export default useApi;`,
   {
     id: '10',
     title: 'Python Async/Await Example',
+    description: 'An example of using async/await in Python to fetch multiple URLs concurrently using aiohttp.',
     code: `import asyncio
 import aiohttp
 import time

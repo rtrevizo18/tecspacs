@@ -1,5 +1,5 @@
 import React from "react";
-import { mockSnippets } from "../data/mockData";
+import { mockSnippets, getUserById } from "../data/mockData";
 import SnippetCard from "../components/SnippetCard";
 import Sidebar from "../components/Sidebar";
 
@@ -16,7 +16,7 @@ const Dashboard: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-text-primary mb-2">
-              Featured Snippets
+              Snippet Feed
             </h1>
             <p className="text-text-accent">
               Discover and share code snippets with the community
@@ -24,12 +24,20 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Snippet Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {mockSnippets
               .filter((snippet) => snippet.isPublic)
-              .map((snippet) => (
-                <SnippetCard key={snippet.id} snippet={snippet} />
-              ))}
+              .map((snippet) => {
+                const user = getUserById(snippet.authorId);
+                return (
+                  <SnippetCard
+                    key={snippet.id}
+                    snippet={snippet}
+                    authorName={user?.name || "Unknown"}
+                    authorInitial={user?.name?.charAt(0).toUpperCase() || "?"}
+                  />
+                );
+              })}
           </div>
         </div>
       </div>

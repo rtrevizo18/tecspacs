@@ -71,7 +71,7 @@ const Sidebar: React.FC = () => {
               return snippet ? (
                 <Link
                   key={id}
-                  to={`/snippet/${id}`}
+                  to={`/view/${id}`}
                   className="group flex items-center gap-2 text-sm text-text-primary hover:text-text-accent transition-colors"
                 >
                   <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
