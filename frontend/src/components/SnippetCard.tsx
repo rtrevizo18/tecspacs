@@ -36,13 +36,17 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
   };
 
   return (
-    <Link to={`/view/${snippet.id}`}>
+    <div>
       <div className="flex items-center justify-between text-sm text-text-accent mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold">
-            {authorInitial}
-          </div>
-          <div className="font-bold">{authorName}</div>
+          <Link to={`/user/${snippet.authorId}`}>
+            <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
+              {authorInitial}
+            </div>
+          </Link>
+          <Link to={`/user/${snippet.authorId}`} className="font-bold hover:underline">
+            {authorName}
+          </Link>
           <span>{formatDistanceToNow(snippet.createdAt)} ago</span>
         </div>
 
@@ -56,24 +60,26 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
         ))}
       </div>
 
-      <StickyNote
-        variant={getRandomVariant()}
-        className="h-64 transition-transform hover:scale-105 cursor-pointer flex flex-col"
-      >
-        <h3 className="font-bold text-text-primary text-lg">
-          {truncateTitle(snippet.title)}
-        </h3>
+      <Link to={`/view/${snippet.id}`}>
+        <StickyNote
+          variant={getRandomVariant()}
+          className="h-64 transition-transform hover:scale-105 cursor-pointer flex flex-col"
+        >
+          <h3 className="font-bold text-text-primary text-lg">
+            {truncateTitle(snippet.title)}
+          </h3>
 
-        <DashedLine text={snippet.description} />
+          <DashedLine text={snippet.description} />
 
-        {/* Code Preview */}
-        <div className="mt-4 flex-1 bg-white border border-pen-black rounded p-2 overflow-auto">
-          <pre className="text-xs font-code text-text-primary whitespace-pre-wrap break-words">
-            {truncateCode(snippet.code)}
-          </pre>
-        </div>
-      </StickyNote>
-    </Link>
+          {/* Code Preview */}
+          <div className="mt-4 flex-1 bg-white border border-pen-black rounded p-2 overflow-auto">
+            <pre className="text-xs font-code text-text-primary whitespace-pre-wrap break-words">
+              {truncateCode(snippet.code)}
+            </pre>
+          </div>
+        </StickyNote>
+      </Link>
+    </div>
   );
 };
 

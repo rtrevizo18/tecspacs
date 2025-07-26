@@ -16,6 +16,7 @@ const UserProfile: React.FC = () => {
   const [pinnedSnippets, setPinnedSnippets] = useState<string[]>(
     user?.createdSnippets.slice(0, 3) || []
   );
+  const [activeTab, setActiveTab] = useState<"my" | "saved">("my");
 
   const handleSaveBio = () => {
     setIsEditingBio(false);
@@ -43,8 +44,11 @@ const UserProfile: React.FC = () => {
   }
 
   const userSnippets = mockSnippets.filter(snippet => snippet.authorId === user.id);
-  const featuredSnippets = userSnippets.filter(snippet => pinnedSnippets.includes(snippet.id));
-  const regularSnippets = userSnippets.filter(snippet => !pinnedSnippets.includes(snippet.id));
+  const savedSnippets = mockSnippets.filter(snippet => user.savedSnippets.includes(snippet.id));
+  
+  const currentSnippets = activeTab === "my" ? userSnippets : savedSnippets;
+  const featuredSnippets = activeTab === "my" ? userSnippets.filter(snippet => pinnedSnippets.includes(snippet.id)) : [];
+  const regularSnippets = activeTab === "my" ? userSnippets.filter(snippet => !pinnedSnippets.includes(snippet.id)) : savedSnippets;
 
   return (
     <div className="min-h-screen bg-sketch-white bg-grid-pattern p-4">
@@ -102,6 +106,33 @@ const UserProfile: React.FC = () => {
           </div>
         </StickyNote>
 
+        {isOwnProfile && (
+          <StickyNote variant="default" className="mb-6">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setActiveTab("my")}
+                className={`px-4 py-2 font-bold transition-colors ${
+                  activeTab === "my"
+                    ? "bg-pen-black text-white"
+                    : "bg-white text-pen-black border border-pen-black hover:bg-gray-100"
+                }`}
+              >
+                My Snippets ({userSnippets.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("saved")}
+                className={`px-4 py-2 font-bold transition-colors ${
+                  activeTab === "saved"
+                    ? "bg-pen-black text-white"
+                    : "bg-white text-pen-black border border-pen-black hover:bg-gray-100"
+                }`}
+              >
+                Saved Snippets ({savedSnippets.length})
+              </button>
+            </div>
+          </StickyNote>
+        )}
+
         {featuredSnippets.length > 0 && (
           <div className="mb-8">
             <StickyNote variant="green" className="mb-4">
@@ -135,7 +166,9 @@ const UserProfile: React.FC = () => {
         {regularSnippets.length > 0 && (
           <div>
             <StickyNote variant="default" className="mb-4">
-              <h2 className="text-xl font-bold text-pen-black">All Snippets</h2>
+              <h2 className="text-xl font-bold text-pen-black">
+                {activeTab === "my" ? "All Snippets" : "Saved Snippets"}
+              </h2>
             </StickyNote>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {regularSnippets.map((snippet) => (
@@ -150,10 +183,17 @@ const UserProfile: React.FC = () => {
           </div>
         )}
 
-        {userSnippets.length === 0 && (
+        {currentSnippets.length === 0 && (
           <StickyNote variant="pink" className="text-center">
-            <h2 className="text-xl font-bold text-pen-black mb-2">No snippets yet</h2>
-            <p className="text-accent">This user hasn't created any snippets.</p>
+            <h2 className="text-xl font-bold text-pen-black mb-2">
+              {activeTab === "my" ? "No snippets yet" : "No saved snippets"}
+            </h2>
+            <p className="text-accent">
+              {activeTab === "my" 
+                ? (isOwnProfile ? "You haven't created any snippets yet." : "This user hasn't created any snippets.")
+                : "You haven't saved any snippets yet."
+              }
+            </p>
           </StickyNote>
         )}
       </div>
