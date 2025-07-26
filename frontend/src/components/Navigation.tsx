@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import OutlineButton from "./OutlineButton";
 import { getCurrentUser } from "../data/mockData";
 
 const Navigation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const currentUser = getCurrentUser();
+  const navigate = useNavigate();
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-sketch-white border-b border-pen-black z-50 px-4 py-3">
@@ -32,10 +33,10 @@ const Navigation: React.FC = () => {
         <div className="flex items-center gap-6">
           {currentUser ? (
             <>
-              <OutlineButton size="small" onClick={() => {}}>
+              <OutlineButton size="small" onClick={() => navigate("/new")}>
                 New Snippet
               </OutlineButton>
-              <div className="flex items-center gap-2">
+              <Link to={`/user/${currentUser.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <div className="w-8 h-8 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center">
                   <span className="text-sm font-bold">
                     {currentUser.name.charAt(0)}
@@ -44,14 +45,14 @@ const Navigation: React.FC = () => {
                 <span className="text-text-primary font-medium">
                   {currentUser.name}
                 </span>
-              </div>
+              </Link>
             </>
           ) : (
             <>
-              <OutlineButton size="small" onClick={() => {}}>
+              <OutlineButton size="small" onClick={() => navigate("/login")}>
                 Login
               </OutlineButton>
-              <OutlineButton size="small" onClick={() => {}}>
+              <OutlineButton size="small" onClick={() => navigate("/register")}>
                 Register
               </OutlineButton>
             </>
