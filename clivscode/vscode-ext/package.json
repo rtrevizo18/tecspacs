@@ -1,24 +1,190 @@
 {
   "name": "tecspacs-vscode-ext",
+  "displayName": "Tecspacs",
   "version": "0.0.1",
-  "description": "VSCode Extension for tecspacs",
+  "description": "VSCode Extension for tecspacs - Manage your code snippets and packages",
   "license": "MIT",
   "author": "rtrevizo18",
-  "type": "module",
+  "publisher": "rtrevizo18",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Snippets",
+    "Other"
+  ],
   "keywords": [
     "vscode",
-    "vscode ext"
+    "snippets",
+    "packages",
+    "code-management"
   ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onView:tecspacsExplorer",
+    "onCommand:tecspacs.getSnippet",
+    "onCommand:tecspacs.createSnippet",
+    "onCommand:tecspacs.login",
+    "onCommand:tecspacs.logout",
+    "onCommand:tecspacs.whoami",
+    "onCommand:tecspacs.getPackage",
+    "onCommand:tecspacs.createPackage",
+    "onCommand:tecspacs.listSnippets",
+    "onCommand:tecspacs.listPackages",
+    "onCommand:tecspacs.refresh",
+    "onCommand:tecspacs.insertSnippet",
+    "onCommand:tecspacs.viewPackage",
+    "onCommand:tecspacs.updateStatusBar",
+    "onCommand:tecspacs.browseSnippets",
+    "onCommand:tecspacs.browsePackages",
+    "onCommand:tecspacs.showAllSnippets"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "tecspacs.getSnippet",
+        "title": "Tecspacs: Get Snippet",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.createSnippet",
+        "title": "Tecspacs: Create Snippet",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.login",
+        "title": "Tecspacs: Login",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.logout",
+        "title": "Tecspacs: Logout",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.whoami",
+        "title": "Tecspacs: Show Profile",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.getPackage",
+        "title": "Tecspacs: Get Package",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.createPackage",
+        "title": "Tecspacs: Create Package",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.listSnippets",
+        "title": "Tecspacs: List All Snippets",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.listPackages",
+        "title": "Tecspacs: List All Packages",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.copyCode",
+        "title": "Tecspacs: Copy Auth Code",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.refresh",
+        "title": "Tecspacs: Refresh",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.insertSnippet",
+        "title": "Tecspacs: Insert Snippet",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.viewPackage",
+        "title": "Tecspacs: View Package",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.browseSnippets",
+        "title": "Tecspacs: Browse Web Snippets",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.browsePackages",
+        "title": "Tecspacs: Browse Web Packages",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.showAllSnippets",
+        "title": "Tecspacs: Show All Snippets (Debug)",
+        "category": "Tecspacs"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tecspacs",
+          "title": "Tecspacs",
+          "icon": "$(code)"
+        }
+      ]
+    },
+    "views": {
+      "tecspacs": [
+        {
+          "id": "tecspacsExplorer",
+          "name": "Explorer",
+          "when": "true"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "tecspacs.getSnippet",
+          "when": "true"
+        },
+        {
+          "command": "tecspacs.createSnippet",
+          "when": "true"
+        },
+        {
+          "command": "tecspacs.login",
+          "when": "true"
+        }
+      ]
+    }
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "node": "^20.19.4"
+    "axios": "^1.11.0",
+    "better-sqlite3": "^12.2.0",
+    "clipboardy": "^4.0.0",
+    "dotenv": "^17.2.1",
+    "env-paths": "^3.0.0",
+    "jwt-decode": "^4.0.0",
+    "open": "^10.2.0",
+    "openid-client": "^6.6.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^9.32.0",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "typescript": "^5.0.0"
   }
 }
