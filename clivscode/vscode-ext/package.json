@@ -109,12 +109,17 @@
       },
       {
         "command": "tecspacs.browseSnippets",
-        "title": "Browse Web Snippets",
+        "title": "Search Snippets",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.browsePackages",
-        "title": "Browse Web Packages",
+        "title": "Search Packages",
+        "category": "Tecspacs"
+      },
+      {
+        "command": "tecspacs.openWebApp",
+        "title": "Open Web App",
         "category": "Tecspacs"
       },
       {

@@ -23,8 +23,9 @@ export declare class TecspacsCommands {
     private showPackagePreview;
     private previewPackageFiles;
     private installPackage;
-    browseSnippets(): Promise<void>;
-    browsePackages(): Promise<void>;
+    searchSnippets(): Promise<void>;
+    searchPackages(): Promise<void>;
+    openWebApp(): Promise<void>;
     showAllSnippets(): Promise<void>;
 }
 //# sourceMappingURL=tecspacsCommands.d.ts.map

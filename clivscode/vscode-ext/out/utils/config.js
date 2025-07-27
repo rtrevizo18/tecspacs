@@ -54,11 +54,13 @@ class Config {
             auth0: {
                 domain: settings.get('auth0.domain') || 'dev-z8vumng8vd7v16a5.us.auth0.com',
                 clientId: settings.get('auth0.clientId') || 'nGV0n1wKc25rvRNK6qyQEOyjN83i7wWB',
-                audience: settings.get('auth0.audience') || 'https://api.tecspacs.dev'
+                audience: settings.get('auth0.audience') || 'https://tecspacs.onrender.com'
             },
             api: {
-                baseUrl: settings.get('api.baseUrl') || 'https://821f1e79957c.ngrok-free.app'
-            }
+                baseUrl: settings.get('api.baseUrl') || 'https://tecspacs.onrender.com'
+            },
+            // Add frontendUrl for convenience
+            frontendUrl: settings.get('frontendUrl') || 'https://frontend-nine-rosy-50.vercel.app'
         };
         logger_1.Logger.debug('Configuration loaded: ' + JSON.stringify(config));
         return config;

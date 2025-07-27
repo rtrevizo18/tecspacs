@@ -1,13 +1,10 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Main white square with border for visibility -->
-  <rect x="3" y="3" width="18" height="18" rx="2" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1"/>
+  <!-- Simple, bold white square that will definitely be visible -->
+  <rect x="2" y="2" width="20" height="20" rx="3" fill="#FFFFFF"/>
   
-  <!-- Inner white square -->
-  <rect x="6" y="6" width="12" height="12" rx="1" fill="#FFFFFF"/>
+  <!-- Dark inner square for contrast -->
+  <rect x="5" y="5" width="14" height="14" rx="2" fill="#333333"/>
   
-  <!-- Small accent square -->
-  <rect x="9" y="9" width="6" height="6" rx="1" fill="#E0E0E0"/>
-  
-  <!-- Center dot for definition -->
-  <circle cx="12" cy="12" r="1" fill="#999999"/>
+  <!-- White center square -->
+  <rect x="8" y="8" width="8" height="8" rx="1" fill="#FFFFFF"/>
 </svg> 

@@ -95,12 +95,15 @@ function activate(context) {
     const viewPackageCommand = vscode.commands.registerCommand('tecspacs.viewPackage', async (packageId) => {
         await commands.viewPackageById(packageId);
     });
-    // Browse web content commands
-    const browseSnippetsCommand = vscode.commands.registerCommand('tecspacs.browseSnippets', () => {
-        commands.browseSnippets();
+    // Search and web app commands
+    const searchSnippetsCommand = vscode.commands.registerCommand('tecspacs.searchSnippets', () => {
+        commands.searchSnippets();
     });
-    const browsePackagesCommand = vscode.commands.registerCommand('tecspacs.browsePackages', () => {
-        commands.browsePackages();
+    const searchPackagesCommand = vscode.commands.registerCommand('tecspacs.searchPackages', () => {
+        commands.searchPackages();
+    });
+    const openWebAppCommand = vscode.commands.registerCommand('tecspacs.openWebApp', () => {
+        commands.openWebApp();
     });
     const showAllSnippetsCommand = vscode.commands.registerCommand('tecspacs.showAllSnippets', () => {
         commands.showAllSnippets();
@@ -130,7 +133,7 @@ function activate(context) {
     updateStatusBar();
     // Update status bar when authentication changes
     context.subscriptions.push(vscode.commands.registerCommand('tecspacs.updateStatusBar', updateStatusBar));
-    context.subscriptions.push(refreshCommand, getSnippetCommand, createSnippetCommand, loginCommand, logoutCommand, whoamiCommand, getPackageCommand, createPackageCommand, listSnippetsCommand, listPackagesCommand, copyCodeCommand, insertSnippetCommand, viewPackageCommand, browseSnippetsCommand, browsePackagesCommand, showAllSnippetsCommand);
+    context.subscriptions.push(refreshCommand, getSnippetCommand, createSnippetCommand, loginCommand, logoutCommand, whoamiCommand, getPackageCommand, createPackageCommand, listSnippetsCommand, listPackagesCommand, copyCodeCommand, insertSnippetCommand, viewPackageCommand, searchSnippetsCommand, searchPackagesCommand, openWebAppCommand, showAllSnippetsCommand);
 }
 function deactivate() {
     logger_1.Logger.info('Tecspacs extension is now deactivated!');

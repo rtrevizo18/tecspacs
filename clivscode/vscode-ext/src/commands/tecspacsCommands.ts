@@ -1193,165 +1193,83 @@ Add your content here.`;
         }
     }
 
-    async browseSnippets(): Promise<void> {
+    async searchSnippets(): Promise<void> {
         try {
-            Logger.info('Browsing web snippets...');
-
-            // Get all snippets from API
+            Logger.info('Searching snippets...');
+            const isAuthenticated = await this.authManager.isAuthenticated();
+            if (!isAuthenticated) {
+                vscode.window.showInformationMessage('Please login to search snippets.');
+                return;
+            }
             const snippets = await this.apiClient.getAllSnippets();
-            
             if (!snippets || snippets.length === 0) {
-                vscode.window.showInformationMessage('No snippets found in the community.');
+                vscode.window.showInformationMessage('No snippets found.');
                 return;
             }
-
-            // Get current user to filter out their own snippets
-            const currentUser = await this.authManager.getUserConfig();
-            const otherSnippets = snippets.filter((snippet: any) => {
-                if (!currentUser) return true; // If not logged in, show all
-                return !snippet.createdBy || (
-                    snippet.createdBy._id !== currentUser.auth0Id && 
-                    snippet.createdBy.auth0Id !== currentUser.auth0Id
-                );
-            });
-
-            if (otherSnippets.length === 0) {
-                vscode.window.showInformationMessage('No community snippets found.');
-                return;
-            }
-
-            // Create quick pick items with better formatting
-            const items = otherSnippets.map((snippet: any) => ({
+            const items: SnippetQuickPickItem[] = snippets.map((snippet: SnippetSummary) => ({
                 label: `$(code) ${snippet.title || snippet.name}`,
                 description: snippet.description || '',
-                detail: `${snippet.language} • By ${snippet.createdBy?.username || 'Unknown'} • ${snippet.usage_count || 0} uses`,
+                detail: `${snippet.language} • Used ${snippet.usage_count || 0} times`,
                 snippet: snippet
             }));
-
-            // Show quick pick with search functionality
             const selected = await vscode.window.showQuickPick(items, {
-                placeHolder: 'Search and select a snippet to preview...',
+                placeHolder: 'Search and select a snippet...',
                 matchOnDescription: true,
                 matchOnDetail: true,
                 canPickMany: false
             });
-
-            if (!selected) {
-                Logger.info('No snippet selected');
-                return;
+            if (selected) {
+                await this.insertSnippetById(selected.snippet.id || "");
             }
-
-            // Show snippet preview
-            const snippet = selected.snippet;
-            const previewContent = `📝 Community Snippet: ${snippet.title || snippet.name}
-${'='.repeat(60)}
-
-👤 Created by: ${snippet.createdBy?.username || 'Unknown'}
-🔤 Language: ${snippet.language}
-📅 Created: ${snippet.created_at ? new Date(snippet.created_at).toLocaleString() : 'Unknown'}
-
-📝 Description: ${snippet.description || 'No description provided'}
-
-💻 Content:
-\`\`\`${snippet.language}
-${snippet.content}
-\`\`\`
-
-${'='.repeat(60)}
-💡 This is a community snippet. You can copy the content to use in your projects.`;
-
-            // Create preview document
-            const document = await vscode.workspace.openTextDocument({
-                content: previewContent,
-                language: 'markdown'
-            });
-
-            await vscode.window.showTextDocument(document, { preview: false });
-
-            // Show action buttons
-            const action = await vscode.window.showInformationMessage(
-                `📝 Community Snippet "${snippet.title || snippet.name}" - What would you like to do?`,
-                'Copy to Clipboard',
-                'Insert at Cursor',
-                'Close'
-            );
-
-            if (action === 'Copy to Clipboard') {
-                await vscode.env.clipboard.writeText(snippet.content);
-                vscode.window.showInformationMessage(`📋 Snippet copied to clipboard!`);
-            } else if (action === 'Insert at Cursor') {
-                const editor = vscode.window.activeTextEditor;
-                if (editor) {
-                    await editor.edit(editBuilder => {
-                        const position = editor.selection.active;
-                        editBuilder.insert(position, snippet.content);
-                    });
-                    vscode.window.showInformationMessage(`✅ Snippet inserted at cursor!`);
-                } else {
-                    vscode.window.showInformationMessage('No active editor found. Snippet copied to clipboard instead.');
-                    await vscode.env.clipboard.writeText(snippet.content);
-                }
-            }
-
         } catch (error) {
-            Logger.error('Error browsing snippets', error as Error);
-            vscode.window.showErrorMessage('Failed to browse snippets. Check the output panel for details.');
+            Logger.error('Error searching snippets', error as Error);
+            vscode.window.showErrorMessage('Failed to search snippets.');
         }
     }
 
-    async browsePackages(): Promise<void> {
+    async searchPackages(): Promise<void> {
         try {
-            Logger.info('Browsing web packages...');
-
-            // Get all packages from API
+            Logger.info('Searching packages...');
+            const isAuthenticated = await this.authManager.isAuthenticated();
+            if (!isAuthenticated) {
+                vscode.window.showInformationMessage('Please login to search packages.');
+                return;
+            }
             const packages = await this.apiClient.getAllPackages();
-            
             if (!packages || packages.length === 0) {
-                vscode.window.showInformationMessage('No packages found in the community.');
+                vscode.window.showInformationMessage('No packages found.');
                 return;
             }
-
-            // Get current user to filter out their own packages
-            const currentUser = await this.authManager.getUserConfig();
-            const otherPackages = packages.filter((pkg: any) => {
-                if (!currentUser) return true; // If not logged in, show all
-                return !pkg.createdBy || (
-                    pkg.createdBy._id !== currentUser.auth0Id && 
-                    pkg.createdBy.auth0Id !== currentUser.auth0Id
-                );
-            });
-
-            if (otherPackages.length === 0) {
-                vscode.window.showInformationMessage('No community packages found.');
-                return;
-            }
-
-            // Create quick pick items
-            const items = otherPackages.map((pkg: any) => ({
-                label: `$(package) ${pkg.name}`,
+            const items = packages.map((pkg: PackageSummary) => ({
+                label: `$(package) ${pkg.title || pkg.name}`,
                 description: pkg.description || '',
-                detail: `By ${pkg.createdBy?.username || 'Unknown'} • Dependencies: ${pkg.dependencies || 'none'}`,
-                package: pkg
+                detail: `${pkg.version ? pkg.version + ' • ' : ''}Used ${pkg.usage_count || 0} times`,
+                pkg: pkg
             }));
-
-            // Show quick pick
             const selected = await vscode.window.showQuickPick(items, {
-                placeHolder: 'Search and select a package to preview...',
+                placeHolder: 'Search and select a package...',
                 matchOnDescription: true,
-                matchOnDetail: true
+                matchOnDetail: true,
+                canPickMany: false
             });
-
-            if (!selected) {
-                Logger.info('No package selected');
-                return;
+            if (selected) {
+                await this.viewPackageById(selected.pkg.id || "");
             }
-
-            // Show package preview (reuse existing preview logic)
-            await this.showPackagePreview(selected.package);
-
         } catch (error) {
-            Logger.error('Error browsing packages', error as Error);
-            vscode.window.showErrorMessage('Failed to browse packages. Check the output panel for details.');
+            Logger.error('Error searching packages', error as Error);
+            vscode.window.showErrorMessage('Failed to search packages.');
+        }
+    }
+
+    async openWebApp(): Promise<void> {
+        try {
+            const config = (await import('../utils/config')).getConfig();
+            const fullConfig = config.getFullConfig();
+            const frontendUrl = (fullConfig as any).frontendUrl ? (fullConfig as any).frontendUrl : 'https://frontend-nine-rosy-50.vercel.app/';
+            vscode.env.openExternal(vscode.Uri.parse(frontendUrl));
+        } catch (error) {
+            Logger.error('Error opening web app', error as Error);
+            vscode.window.showErrorMessage('Failed to open web app.');
         }
     }
 

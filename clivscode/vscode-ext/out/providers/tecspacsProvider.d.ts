@@ -17,6 +17,6 @@ export declare class TecspacsItem extends vscode.TreeItem {
     readonly id?: string | undefined;
     readonly description?: string | undefined;
     readonly language?: string | undefined;
-    constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState, type: string, icon: string, id?: string | undefined, description?: string | undefined, language?: string | undefined);
+    constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState, type: string, icon: string, id?: string | undefined, description?: string | undefined, language?: string | undefined, commandName?: string);
 }
 //# sourceMappingURL=tecspacsProvider.d.ts.map

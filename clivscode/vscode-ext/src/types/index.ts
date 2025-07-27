@@ -36,7 +36,10 @@ export interface Package {
 export interface PackageSummary {
     id?: string;
     name: string;
+    title?: string;
     description: string;
+    version?: string;
+    usage_count?: number;
     dependencies?: string;
     files?: string;
     created_at?: string;
@@ -103,12 +106,16 @@ export interface ApiResponse<T> {
 }
 
 // Configuration types
-export interface ExtensionConfig {
-    defaultLanguage?: string;
-    defaultCategory?: string;
-    autoSave?: boolean;
-    showOutputPanel?: boolean;
-    maxSnippetsInPicker?: number;
+export interface TecspacsConfig {
+    auth0: {
+        domain: string;
+        clientId: string;
+        audience: string;
+    };
+    api: {
+        baseUrl: string;
+    };
+    frontendUrl?: string;
 }
 
 // Command result types

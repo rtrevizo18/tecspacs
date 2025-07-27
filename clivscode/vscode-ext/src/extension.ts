@@ -74,13 +74,15 @@ export function activate(context: vscode.ExtensionContext) {
         await commands.viewPackageById(packageId);
     });
 
-    // Browse web content commands
-    const browseSnippetsCommand = vscode.commands.registerCommand('tecspacs.browseSnippets', () => {
-        commands.browseSnippets();
+    // Search and web app commands
+    const searchSnippetsCommand = vscode.commands.registerCommand('tecspacs.searchSnippets', () => {
+        commands.searchSnippets();
     });
-
-    const browsePackagesCommand = vscode.commands.registerCommand('tecspacs.browsePackages', () => {
-        commands.browsePackages();
+    const searchPackagesCommand = vscode.commands.registerCommand('tecspacs.searchPackages', () => {
+        commands.searchPackages();
+    });
+    const openWebAppCommand = vscode.commands.registerCommand('tecspacs.openWebApp', () => {
+        commands.openWebApp();
     });
 
     const showAllSnippetsCommand = vscode.commands.registerCommand('tecspacs.showAllSnippets', () => {
@@ -131,8 +133,9 @@ export function activate(context: vscode.ExtensionContext) {
         copyCodeCommand,
         insertSnippetCommand,
         viewPackageCommand,
-        browseSnippetsCommand,
-        browsePackagesCommand,
+        searchSnippetsCommand,
+        searchPackagesCommand,
+        openWebAppCommand,
         showAllSnippetsCommand
     );
 }

@@ -53,10 +53,11 @@ class TecspacsProvider {
             return [
                 new TecspacsItem('📝 My Snippets', vscode.TreeItemCollapsibleState.Collapsed, 'my-snippets', 'folder'),
                 new TecspacsItem('📦 My Packages', vscode.TreeItemCollapsibleState.Collapsed, 'my-packages', 'folder'),
-                new TecspacsItem('🌐 Browse Web Snippets', vscode.TreeItemCollapsibleState.None, 'browse-snippets', 'globe'),
-                new TecspacsItem('🌐 Browse Web Packages', vscode.TreeItemCollapsibleState.None, 'browse-packages', 'globe'),
-                new TecspacsItem('➕ Create New Snippet', vscode.TreeItemCollapsibleState.None, 'create-snippet', 'add'),
-                new TecspacsItem('➕ Create New Package', vscode.TreeItemCollapsibleState.None, 'create-package', 'add'),
+                new TecspacsItem('🔍 Search Snippets', vscode.TreeItemCollapsibleState.None, 'search-snippets', 'globe', undefined, undefined, undefined, 'tecspacs.searchSnippets'),
+                new TecspacsItem('🔍 Search Packages', vscode.TreeItemCollapsibleState.None, 'search-packages', 'globe', undefined, undefined, undefined, 'tecspacs.searchPackages'),
+                new TecspacsItem('🌐 Open Web App', vscode.TreeItemCollapsibleState.None, 'open-web-app', 'globe', undefined, undefined, undefined, 'tecspacs.openWebApp'),
+                new TecspacsItem('➕ Create New Snippet', vscode.TreeItemCollapsibleState.None, 'create-snippet', 'add', undefined, undefined, undefined, 'tecspacs.createSnippet'),
+                new TecspacsItem('➕ Create New Package', vscode.TreeItemCollapsibleState.None, 'create-package', 'add', undefined, undefined, undefined, 'tecspacs.createPackage'),
                 new TecspacsItem('🔄 Refresh', vscode.TreeItemCollapsibleState.None, 'refresh', 'refresh'),
                 new TecspacsItem('🔑 Login to Create', vscode.TreeItemCollapsibleState.None, 'login', 'sign-in')
             ];
@@ -178,7 +179,7 @@ class TecspacsProvider {
 }
 exports.TecspacsProvider = TecspacsProvider;
 class TecspacsItem extends vscode.TreeItem {
-    constructor(label, collapsibleState, type, icon, id, description, language) {
+    constructor(label, collapsibleState, type, icon, id, description, language, commandName) {
         super(label, collapsibleState);
         this.label = label;
         this.collapsibleState = collapsibleState;
@@ -187,67 +188,11 @@ class TecspacsItem extends vscode.TreeItem {
         this.id = id;
         this.description = description;
         this.language = language;
-        this.tooltip = description || label;
-        this.description = description;
-        // Set icon
         this.iconPath = new vscode.ThemeIcon(icon);
-        // Set context value for commands
-        this.contextValue = type;
-        // Set command based on type
-        if (type === 'snippet' && id) {
+        if (commandName) {
             this.command = {
-                command: 'tecspacs.insertSnippet',
-                title: 'Insert Snippet',
-                arguments: [id]
-            };
-        }
-        else if (type === 'package' && id) {
-            this.command = {
-                command: 'tecspacs.viewPackage',
-                title: 'View Package',
-                arguments: [id]
-            };
-        }
-        else if (type === 'create-snippet') {
-            this.command = {
-                command: 'tecspacs.createSnippet',
-                title: 'Create Snippet'
-            };
-        }
-        else if (type === 'create-package') {
-            this.command = {
-                command: 'tecspacs.createPackage',
-                title: 'Create Package'
-            };
-        }
-        else if (type === 'refresh') {
-            this.command = {
-                command: 'tecspacs.refresh',
-                title: 'Refresh'
-            };
-        }
-        else if (type === 'login' || type === 'login-required') {
-            this.command = {
-                command: 'tecspacs.login',
-                title: 'Login'
-            };
-        }
-        else if (type === 'browse-snippets') {
-            this.command = {
-                command: 'tecspacs.browseSnippets',
-                title: 'Browse Web Snippets'
-            };
-        }
-        else if (type === 'browse-packages') {
-            this.command = {
-                command: 'tecspacs.browsePackages',
-                title: 'Browse Web Packages'
-            };
-        }
-        else if (type === 'show-all-snippets') {
-            this.command = {
-                command: 'tecspacs.showAllSnippets',
-                title: 'Show All Snippets'
+                command: commandName,
+                title: label
             };
         }
     }
