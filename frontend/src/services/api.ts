@@ -1,6 +1,6 @@
 import { User, TEC, PAC } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://821f1e79957c.ngrok-free.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://tecspacs.onrender.com';
 
 interface ApiError {
   message: string;
