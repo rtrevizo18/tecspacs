@@ -70,13 +70,22 @@ const ItemCard: React.FC<ItemCardProps> = ({
         </button> */}
       </div>
       
-      <div className="mb-3 flex flex-wrap gap-2">
-        {isTEC && tecItem.tags.map((tag) => (
-          <LanguageTag key={tag} language={tag.trim()} />
-        ))}
-        {isPAC && pacItem.dependencies.map((dep) => (
-          <LanguageTag key={dep} language={dep.trim()} />
-        ))}
+      <div className="mb-3 flex flex-wrap gap-2 min-h-[2rem]">
+        {isTEC && tecItem.tags
+          .filter((tag) => tag && tag.trim().length > 0)
+          .map((tag) => (
+            <LanguageTag key={tag} language={tag.trim()} />
+          ))}
+        {isPAC && pacItem.dependencies
+          .filter((dep) => dep && dep.trim().length > 0)
+          .map((dep) => (
+            <LanguageTag key={dep} language={dep.trim()} />
+          ))}
+        {/* Invisible placeholder when no valid tags to maintain consistent spacing */}
+        {((isTEC && tecItem.tags.filter(tag => tag && tag.trim().length > 0).length === 0) || 
+          (isPAC && pacItem.dependencies.filter(dep => dep && dep.trim().length > 0).length === 0)) && (
+          <div className="h-6 w-0" />
+        )}
       </div>
 
       <Link to={isTEC ? `/view/${item._id}` : `/view-pac/${item._id}`}>
