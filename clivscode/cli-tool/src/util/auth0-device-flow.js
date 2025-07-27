@@ -1,5 +1,6 @@
 import axios from 'axios';
 import open from 'open';
+import { jwt_decode } from 'jwt_decode';
 import { configDotenv } from 'dotenv';
 
 configDotenv();
@@ -78,4 +79,43 @@ async function pollForToken(deviceCode, interval, expiresIn) {
   }
 
   throw new Error('Authentication timed out');
+}
+
+// New function to check if a token is expired
+export function isTokenExpired(token) {
+  try {
+    if (!token) return true;
+
+    const decoded = jwt_decode(token);
+    const currentTime = Date.now() / 1000;
+
+    // Add a buffer of 60 seconds to account for time differences
+    return decoded.exp < currentTime + 60;
+  } catch (error) {
+    // If we can't decode the token, consider it expired
+    return true;
+  }
+}
+
+// New function to refresh an access token using a refresh token
+export async function refreshToken(refreshToken) {
+  try {
+    const response = await axios.post(
+      `https://${AUTH0_DOMAIN}/oauth/token`,
+      {
+        grant_type: 'refresh_token',
+        client_id: AUTH0_CLIENT_ID,
+        refresh_token: refreshToken,
+      },
+      {
+        headers: {
+          'content-type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw new Error(`Token refresh failed: ${error.message}`);
+  }
 }

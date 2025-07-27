@@ -22,6 +22,7 @@
     "dotenv": "^17.2.1",
     "env-paths": "^3.0.0",
     "inquirer": "^12.8.2",
+    "jwt-decode": "^4.0.0",
     "open": "^10.2.0",
     "openid-client": "^6.6.2"
   },
