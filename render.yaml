@@ -3,9 +3,10 @@ services:
     name: tecspacs-backend
     env: node
     plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
-    nodeVersion: 18
+    buildCommand: npm install
+    startCommand: npm start
+    nodeVersion: 20
+    rootDir: backend
     envVars:
       - key: NODE_ENV
         value: production
