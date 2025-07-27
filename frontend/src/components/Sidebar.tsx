@@ -15,7 +15,7 @@ const Sidebar: React.FC = () => {
           <h3 className="font-bold text-text-primary mb-3">My TECs</h3>
           <Link to="/new-tec">
             <OutlineButton size="small" onClick={() => {}}>
-              New TEC
+              + New TEC
             </OutlineButton>
           </Link>
         </div>
@@ -68,7 +68,7 @@ const Sidebar: React.FC = () => {
             <h3 className="font-bold text-text-primary mb-3">My PACs</h3>
             <Link to="/new-pac">
               <OutlineButton size="small" onClick={() => {}}>
-                New PAC
+                + New PAC
               </OutlineButton>
             </Link>
           </div>

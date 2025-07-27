@@ -42,6 +42,19 @@ class ApiService {
     return this.handleResponse<User>(response);
   }
 
+  async createUserProfile(accessToken: string, profile: {
+    username: string;
+    email: string;
+  }): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(accessToken),
+      body: JSON.stringify(profile),
+    });
+    
+    return this.handleResponse<User>(response);
+  }
+
   // TEC (snippet) endpoints
   async getAllTecs(accessToken?: string): Promise<TEC[]> {
     const headers = accessToken ? this.getAuthHeaders(accessToken) : {};

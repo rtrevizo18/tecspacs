@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import OutlineButton from "./OutlineButton";
@@ -8,8 +8,17 @@ import { User } from "../types";
 const Navigation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const { isAuthenticated, isLoading, loginWithRedirect, logout, getAccessTokenSilently, user } = useAuth0();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const {
+    isAuthenticated,
+    isLoading,
+    loginWithRedirect,
+    logout,
+    getAccessTokenSilently,
+    user,
+  } = useAuth0();
   const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -19,16 +28,44 @@ const Navigation: React.FC = () => {
           const backendUser = await apiService.getCurrentUser(accessToken);
           setCurrentUser(backendUser);
         } catch (error) {
-          console.error('Error fetching user:', error);
-          if (error === 'UNAUTHORIZED') {
+          console.error("Error fetching user:", error);
+          if (error === "UNAUTHORIZED") {
             logout();
+          } else {
+            // TEMPORARILY DISABLED: If backend user doesn't exist, redirect to profile setup
+            // console.log('User not found in backend, redirecting to profile setup');
+            // navigate('/setup-profile');
+
+            // For now, just log the error and continue without backend user
+            console.log(
+              "Backend user not found, continuing with Auth0 user data only"
+            );
           }
         }
+      } else {
+        setCurrentUser(null);
       }
     };
 
     fetchUser();
-  }, [isAuthenticated, user, getAccessTokenSilently, logout]);
+  }, [isAuthenticated, user, getAccessTokenSilently, logout, navigate]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogin = () => {
     loginWithRedirect();
@@ -63,25 +100,82 @@ const Navigation: React.FC = () => {
         <div className="flex items-center gap-6">
           {isLoading ? (
             <div className="text-text-accent">Loading...</div>
-          ) : isAuthenticated && currentUser ? (
+          ) : isAuthenticated ? (
             <>
-              <OutlineButton size="small" onClick={() => navigate("/new-tec")}>
-                New TEC
-              </OutlineButton>
-              <div className="flex items-center gap-2">
-                <Link to={`/user/${currentUser.auth0Id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              {/* New TEC Button - White background with black border */}
+              <button
+                onClick={() => navigate("/new-tec")}
+                className="px-4 py-2 text-sm font-bold bg-white border-2 border-pen-black text-pen-black rounded hover:bg-gray-50 transition-colors"
+              >
+                + New TEC
+              </button>
+
+              {/* New PAC Button - Black background with white border */}
+              <button
+                onClick={() => navigate("/new-pac")}
+                className="px-4 py-2 text-sm font-bold bg-pen-black border-2 border-white text-white rounded hover:bg-gray-800 transition-colors"
+              >
+                + New PAC
+              </button>
+
+              {/* User Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                >
                   <div className="w-8 h-8 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold">
-                      {currentUser.name.charAt(0)}
+                      {(currentUser?.name || user?.name || user?.email)
+                        ?.charAt(0)
+                        ?.toUpperCase()}
                     </span>
                   </div>
                   <span className="text-text-primary font-medium">
-                    {currentUser.name}
+                    {currentUser?.name ||
+                      user?.name ||
+                      user?.email?.split("@")[0]}
                   </span>
-                </Link>
-                <OutlineButton size="small" onClick={handleLogout}>
-                  Logout
-                </OutlineButton>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-pen-black rounded-lg shadow-lg z-50">
+                    <div className="py-1">
+                      <Link
+                        to={`/user/${currentUser?.auth0Id || user?.sub}`}
+                        className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (
