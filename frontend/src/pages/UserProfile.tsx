@@ -5,13 +5,15 @@ import OutlineButton from "../components/OutlineButton";
 import { getUserById } from "../data/mockData";
 import DashedLine from "../components/DashedLine";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
 import { TEC, PAC, User } from "../types";
 import { getDisplayName, getDisplayInitial } from "../utils/userUtils";
 
 const UserProfile: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
-  const { currentUser } = useAuthContext();
+  const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [userTECs, setUserTECs] = useState<TEC[]>([]);
   const [userPACs, setUserPACs] = useState<PAC[]>([]);
@@ -28,6 +30,8 @@ const UserProfile: React.FC = () => {
 
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [editedBio, setEditedBio] = useState("");
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [editedUsername, setEditedUsername] = useState("");
   const [pinnedTECs, setPinnedTECs] = useState<string[]>([]);
   const [pinnedPACs, setPinnedPACs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"tecs" | "pacs">("tecs");
@@ -71,6 +75,7 @@ const UserProfile: React.FC = () => {
 
         setProfileUser(transformedUser);
         setEditedBio(transformedUser.bio || "");
+        setEditedUsername(transformedUser.username || "");
         setUserTECs(tecs);
         setUserPACs(pacs);
 
@@ -89,6 +94,7 @@ const UserProfile: React.FC = () => {
         ) {
           setProfileUser(currentUser);
           setEditedBio(currentUser.bio || "");
+          setEditedUsername(currentUser.username || "");
           // Use empty arrays since we couldn't fetch from API
           setUserTECs([]);
           setUserPACs([]);
@@ -98,6 +104,7 @@ const UserProfile: React.FC = () => {
           if (mockUser) {
             setProfileUser(mockUser);
             setEditedBio(mockUser.bio || "");
+            setEditedUsername(mockUser.username || "");
             setUserTECs([]);
             setUserPACs([]);
           }
@@ -110,13 +117,57 @@ const UserProfile: React.FC = () => {
     fetchProfileData();
   }, [uid, currentUser]);
 
-  const handleSaveBio = () => {
-    setIsEditingBio(false);
+  const handleSaveBio = async () => {
+    if (!currentUser || !accessToken || !isOwnProfile) return;
+
+    try {
+      await apiService.updateUserProfile(accessToken, {
+        bio: editedBio,
+      });
+
+      // Update local state
+      setProfileUser((prev) => (prev ? { ...prev, bio: editedBio } : null));
+      setIsEditingBio(false);
+      showSuccess("Bio updated successfully!");
+    } catch (error) {
+      console.error("Error updating bio:", error);
+      showError("Failed to update bio. Please try again.");
+    }
   };
 
   const handleCancelBio = () => {
     setEditedBio(profileUser?.bio || "");
     setIsEditingBio(false);
+  };
+
+  const handleSaveUsername = async () => {
+    if (!currentUser || !accessToken || !isOwnProfile) return;
+
+    if (!editedUsername.trim()) {
+      showError("Username cannot be empty");
+      return;
+    }
+
+    try {
+      const updatedUser = await apiService.updateUserProfile(accessToken, {
+        username: editedUsername.trim(),
+      });
+
+      // Update local state
+      setProfileUser((prev) =>
+        prev ? { ...prev, username: editedUsername.trim() } : null
+      );
+      setIsEditingUsername(false);
+      showSuccess("Username updated successfully!");
+    } catch (error) {
+      console.error("Error updating username:", error);
+      showError("Failed to update username. Please try again.");
+    }
+  };
+
+  const handleCancelUsername = () => {
+    setEditedUsername(profileUser?.username || "");
+    setIsEditingUsername(false);
   };
 
   const handleUnpinTEC = (tecId: string) => {
@@ -183,7 +234,7 @@ const UserProfile: React.FC = () => {
       email: profileUser.email,
       _id: profileUser._id,
       id: profileUser.id,
-      auth0Id: profileUser.auth0Id
+      auth0Id: profileUser.auth0Id,
     });
   };
 
@@ -196,7 +247,7 @@ const UserProfile: React.FC = () => {
       email: profileUser.email,
       _id: profileUser._id,
       id: profileUser.id,
-      auth0Id: profileUser.auth0Id
+      auth0Id: profileUser.auth0Id,
     });
   };
 
@@ -215,9 +266,47 @@ const UserProfile: React.FC = () => {
 
           {/* Username and Bio - Right */}
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-pen-black mb-4">
-              {getUserDisplayName()}
-            </h1>
+            {isEditingUsername ? (
+              <div className="mb-4">
+                <input
+                  value={editedUsername}
+                  onChange={(e) => setEditedUsername(e.target.value)}
+                  className="text-4xl font-bold text-pen-black bg-transparent border-b-2 border-pen-black focus:outline-none w-full"
+                  placeholder="Enter username..."
+                />
+                <div className="flex gap-2 mt-2">
+                  <OutlineButton
+                    variant="primary"
+                    size="small"
+                    onClick={handleSaveUsername}
+                  >
+                    Save
+                  </OutlineButton>
+                  <OutlineButton
+                    variant="secondary"
+                    size="small"
+                    onClick={handleCancelUsername}
+                  >
+                    Cancel
+                  </OutlineButton>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 mb-4">
+                <h1 className="text-4xl font-bold text-pen-black">
+                  {getUserDisplayName()}
+                </h1>
+                {isOwnProfile && (
+                  <OutlineButton
+                    variant="secondary"
+                    size="small"
+                    onClick={() => setIsEditingUsername(true)}
+                  >
+                    Edit Username
+                  </OutlineButton>
+                )}
+              </div>
+            )}
 
             <StickyNote variant="blue" size="medium">
               {isEditingBio ? (
@@ -303,7 +392,7 @@ const UserProfile: React.FC = () => {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
               <h2 className="text-xl font-bold text-pen-black flex items-center gap-2">
-                📌 Featured {activeTab === "tecs" ? "TECs" : "PACs"}
+                All {activeTab === "tecs" ? "TECs" : "PACs"}
               </h2>
               <div className="flex-1 h-px border-t border-dashed border-pen-black"></div>
             </div>
@@ -311,20 +400,13 @@ const UserProfile: React.FC = () => {
               <div className="space-y-1">
                 {featuredItems.map((item) => (
                   <div key={item._id} className="flex items-center gap-2">
-                    {/* {isOwnProfile && (
-                      <button
-                        onClick={() => activeTab === "tecs" ? handleUnpinTEC(item._id) : handleUnpinPAC(item._id)}
-                        className="w-2 h-2 bg-red-500 hover:bg-red-600 transition-colors flex-shrink-0"
-                        title={`Unpin ${activeTab === "tecs" ? "TEC" : "PAC"}`}
-                      />
-                    )} */}
                     <Link
                       to={
                         activeTab === "tecs"
                           ? `/view/${item._id}`
                           : `/view-pac/${item._id}`
                       }
-                      className="group flex items-center gap-2 text-sm text-text-primary hover:text-text-accent transition-colors flex-1"
+                      className="group flex items-center gap-2 ml-8 text-lg text-text-primary hover:text-text-accent transition-colors flex-1"
                     >
                       <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
                       <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">

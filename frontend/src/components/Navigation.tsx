@@ -8,13 +8,8 @@ import { getDisplayName, getDisplayInitial } from "../utils/userUtils";
 const Navigation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const {
-    isAuthenticated,
-    isLoading,
-    loginWithRedirect,
-    logout,
-    user,
-  } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } =
+    useAuth0();
   const { currentUser } = useAuthContext();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);

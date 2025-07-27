@@ -31,33 +31,33 @@ function App() {
       authorizationParams={{
         redirect_uri: auth0Config.redirectUri,
         audience: auth0Config.audience,
-        scope: "openid profile email"
+        scope: "openid profile email",
       }}
     >
       <AuthProvider>
         <ToastProvider>
           <Router>
-          <div className="App">
-            <Navigation />
-            <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/view/:id" element={<ViewSnippet />} />
-            <Route path="/view-pac/:id" element={<ViewPAC />} />
-            <Route path="/user/:uid" element={<UserProfile />} />
-            <Route path="/new" element={<NewSnippet />} />
-            <Route path="/new-tec" element={<NewTEC />} />
-            <Route path="/new-pac" element={<NewPAC />} />
-            <Route path="/edit/:id" element={<EditSnippet />} />
-            <Route path="/edit-tec/:id" element={<EditTEC />} />
-            <Route path="/edit-pac/:id" element={<EditPAC />} />
-            <Route path="/callback" element={<Callback />} />
-            <Route path="/setup-profile" element={<SetupProfile />} />
-            <Route path="/auth" element={<AuthCarousel />} />
-            <Route path="/login" element={<AuthCarousel />} />
-            <Route path="/register" element={<AuthCarousel />} />
-            <Route path="/reset-password" element={<AuthCarousel />} />
-          </Routes>
-          </div>
+            <div className="App">
+              <Navigation />
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/view/:id" element={<ViewSnippet />} />
+                <Route path="/view-pac/:id" element={<ViewPAC />} />
+                <Route path="/user/:uid" element={<UserProfile />} />
+                <Route path="/new" element={<NewSnippet />} />
+                <Route path="/new-tec" element={<NewTEC />} />
+                <Route path="/new-pac" element={<NewPAC />} />
+                <Route path="/edit/:id" element={<EditSnippet />} />
+                <Route path="/edit-tec/:id" element={<EditTEC />} />
+                <Route path="/edit-pac/:id" element={<EditPAC />} />
+                <Route path="/callback" element={<Callback />} />
+                <Route path="/setup-profile" element={<SetupProfile />} />
+                <Route path="/auth" element={<AuthCarousel />} />
+                <Route path="/login" element={<AuthCarousel />} />
+                <Route path="/register" element={<AuthCarousel />} />
+                <Route path="/reset-password" element={<AuthCarousel />} />
+              </Routes>
+            </div>
           </Router>
         </ToastProvider>
       </AuthProvider>

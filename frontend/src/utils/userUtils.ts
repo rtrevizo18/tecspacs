@@ -52,35 +52,36 @@ export function getDisplayName(user: {
 }): string {
   // Helper function to check if a string is likely a user ID
   const isLikelyUserId = (str: string): boolean => {
-    // Check for Auth0 IDs
+    // Check for Auth0 IDs (format: auth0|xxxxxxxxxxxxxxxxxxxxxxxx)
     if (str.startsWith('auth0|')) return true;
     
-    // Check for UUID format
+    // Check for Google OAuth IDs (format: google-oauth2|xxxxxxxxxxxxxxxxxx)
+    if (str.startsWith('google-oauth2|')) return true;
+    
+    // Check for auto-generated usernames (format: user_xxxxxxxxxx)
+    if (str.startsWith('user_')) return true;
+    
+    // Check for UUID format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) return true;
     
     // Check for MongoDB ObjectId format (24 hex characters)
     if (/^[0-9a-f]{24}$/i.test(str)) return true;
     
-    // Check for very long strings (likely IDs) - but be more conservative
-    if (str.length > 30) return true;
+    // Check for very long alphanumeric strings that look like generated IDs
+    if (str.length > 25 && !/[\s\W]/.test(str) && /^[a-zA-Z0-9]+$/.test(str)) return true;
     
-    // Only treat as ID if it's very long AND has no spaces AND looks like hex/base64
-    if (str.length > 20 && !/\s/.test(str) && (/^[a-f0-9]+$/i.test(str) || /^[A-Za-z0-9+/=]+$/.test(str))) return true;
+    // Check for base64-like patterns (long strings with specific chars)
+    if (str.length > 20 && /^[A-Za-z0-9+/=_-]+$/.test(str) && !/[aeiou]{2,}/i.test(str)) return true;
     
     return false;
   };
-  
-  console.log('--- getDisplayName DEBUG ---');
-  console.log('Input user object:', user);
   
   // Try username first, but skip if it looks like a user ID
   if (user.username && user.username.trim()) {
     const trimmedUsername = user.username.trim();
     const isUserId = isLikelyUserId(trimmedUsername);
-    console.log(`Username "${trimmedUsername}" is likely user ID: ${isUserId}`);
     
     if (!isUserId) {
-      console.log('USING USERNAME:', trimmedUsername);
       return trimmedUsername;
     }
   }
@@ -89,10 +90,8 @@ export function getDisplayName(user: {
   if (user.name && user.name.trim()) {
     const trimmedName = user.name.trim();
     const isUserId = isLikelyUserId(trimmedName);
-    console.log(`Name "${trimmedName}" is likely user ID: ${isUserId}`);
     
     if (!isUserId) {
-      console.log('USING NAME:', trimmedName);
       return trimmedName;
     }
   }
@@ -103,10 +102,8 @@ export function getDisplayName(user: {
     if (emailName && emailName.trim()) {
       const trimmedEmail = emailName.trim();
       const isUserId = isLikelyUserId(trimmedEmail);
-      console.log(`Email part "${trimmedEmail}" is likely user ID: ${isUserId}`);
       
       if (!isUserId) {
-        console.log('USING EMAIL PART:', trimmedEmail);
         return trimmedEmail;
       }
     }
@@ -114,9 +111,7 @@ export function getDisplayName(user: {
   
   // Fall back to fun name based on user ID
   const userId = user._id || user.id || user.auth0Id || 'unknown';
-  const fallbackName = getFallbackName(userId);
-  console.log('USING FALLBACK NAME:', fallbackName);
-  return fallbackName;
+  return getFallbackName(userId);
 }
 
 /**
@@ -158,23 +153,12 @@ export function getCreatedByDisplayName(createdBy: {
   name?: string;
   email?: string;
 }): string {
-  console.log('=== DEBUG: getCreatedByDisplayName called with ===');
-  console.log('createdBy object:', createdBy);
-  console.log('createdBy.username:', createdBy.username);
-  console.log('createdBy.name:', createdBy.name);
-  console.log('createdBy.email:', createdBy.email);
-  console.log('createdBy._id:', createdBy._id);
-  
-  const result = getDisplayName({
+  return getDisplayName({
     username: createdBy.username,
     name: createdBy.name,
     email: createdBy.email,
     _id: createdBy._id
   });
-  
-  console.log('Final result:', result);
-  console.log('=== END DEBUG ===');
-  return result;
 }
 
 /**
