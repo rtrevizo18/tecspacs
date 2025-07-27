@@ -6,6 +6,7 @@
   "license": "MIT",
   "author": "rtrevizo18",
   "publisher": "rtrevizo18",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
