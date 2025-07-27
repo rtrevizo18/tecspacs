@@ -4,7 +4,7 @@ import { ErrorHandler } from './util/error-handler.js';
 import { db } from './db/db-manager.js';
 
 import dotenv from 'dotenv';
-import { loadAuthCommands } from './commands/auth-commands.js';
+import { loadOnlineCommands } from './commands/auth-commands.js';
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ async function main() {
     await db.initialize();
 
     await loadCommands(program);
-    await loadAuthCommands(program);
+    await loadOnlineCommands(program);
 
     program.parse();
   } catch (err) {
