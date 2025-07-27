@@ -44,82 +44,82 @@
     "commands": [
       {
         "command": "tecspacs.getSnippet",
-        "title": "Tecspacs: Get Snippet",
+        "title": "Get Snippet",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.createSnippet",
-        "title": "Tecspacs: Create Snippet",
+        "title": "Create Snippet",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.login",
-        "title": "Tecspacs: Login",
+        "title": "Login",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.logout",
-        "title": "Tecspacs: Logout",
+        "title": "Logout",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.whoami",
-        "title": "Tecspacs: Show Profile",
+        "title": "Show Profile",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.getPackage",
-        "title": "Tecspacs: Get Package",
+        "title": "Get Package",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.createPackage",
-        "title": "Tecspacs: Create Package",
+        "title": "Create Package",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.listSnippets",
-        "title": "Tecspacs: List All Snippets",
+        "title": "List All Snippets",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.listPackages",
-        "title": "Tecspacs: List All Packages",
+        "title": "List All Packages",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.copyCode",
-        "title": "Tecspacs: Copy Auth Code",
+        "title": "Copy Auth Code",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.refresh",
-        "title": "Tecspacs: Refresh",
+        "title": "Refresh",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.insertSnippet",
-        "title": "Tecspacs: Insert Snippet",
+        "title": "Insert Snippet",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.viewPackage",
-        "title": "Tecspacs: View Package",
+        "title": "View Package",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.browseSnippets",
-        "title": "Tecspacs: Browse Web Snippets",
+        "title": "Browse Web Snippets",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.browsePackages",
-        "title": "Tecspacs: Browse Web Packages",
+        "title": "Browse Web Packages",
         "category": "Tecspacs"
       },
       {
         "command": "tecspacs.showAllSnippets",
-        "title": "Tecspacs: Show All Snippets (Debug)",
+        "title": "Show All Snippets (Debug)",
         "category": "Tecspacs"
       }
     ],
