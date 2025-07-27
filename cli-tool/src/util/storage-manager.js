@@ -496,13 +496,11 @@ export class StorageManager {
    * @returns {Promise<void>}
    */
   static async updateTecOnlineId(name, onlineId) {
-    const db = await this.getDb();
-
     try {
-      await db.run('UPDATE snippets SET online_id = ? WHERE name = ?', [
-        onlineId,
-        name,
-      ]);
+      const updateResult = db.updateSnippet(name, { online_id: onlineId });
+      if (!updateResult) {
+        throw new Error(`Failed to update online ID for snippet ${name}`);
+      }
     } catch (error) {
       console.error(`Failed to update online ID for snippet ${name}:`, error);
       throw error;
@@ -516,13 +514,11 @@ export class StorageManager {
    * @returns {Promise<void>}
    */
   static async updatePacOnlineId(name, onlineId) {
-    const db = await this.getDb();
-
     try {
-      await db.run('UPDATE packages SET online_id = ? WHERE name = ?', [
-        onlineId,
-        name,
-      ]);
+      const updateResult = db.updatePackage(name, { online_id: onlineId });
+      if (!updateResult) {
+        throw new Error(`Failed to update online ID for package ${name}`);
+      }
     } catch (error) {
       console.error(`Failed to update online ID for package ${name}:`, error);
       throw error;
