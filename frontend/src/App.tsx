@@ -11,10 +11,13 @@ import NewTEC from "./pages/NewTEC";
 import NewPAC from "./pages/NewPAC";
 import ViewPAC from "./pages/ViewPAC";
 import EditSnippet from "./pages/EditSnippet";
+import EditTEC from "./pages/EditTEC";
+import EditPAC from "./pages/EditPAC";
 import AuthCarousel from "./components/AuthCarousel";
 import Callback from "./pages/Callback";
 import SetupProfile from "./pages/SetupProfile";
 import { auth0Config } from "./config/auth0";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   // Apply pen cursor to the entire app
@@ -26,12 +29,15 @@ function App() {
       clientId={auth0Config.clientId}
       authorizationParams={{
         redirect_uri: auth0Config.redirectUri,
+        audience: auth0Config.audience,
+        scope: "openid profile email"
       }}
     >
-      <Router>
-        <div className="App">
-          <Navigation />
-          <Routes>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Navigation />
+            <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/view/:id" element={<ViewSnippet />} />
             <Route path="/view-pac/:id" element={<ViewPAC />} />
@@ -40,6 +46,8 @@ function App() {
             <Route path="/new-tec" element={<NewTEC />} />
             <Route path="/new-pac" element={<NewPAC />} />
             <Route path="/edit/:id" element={<EditSnippet />} />
+            <Route path="/edit-tec/:id" element={<EditTEC />} />
+            <Route path="/edit-pac/:id" element={<EditPAC />} />
             <Route path="/callback" element={<Callback />} />
             <Route path="/setup-profile" element={<SetupProfile />} />
             <Route path="/auth" element={<AuthCarousel />} />
@@ -47,8 +55,9 @@ function App() {
             <Route path="/register" element={<AuthCarousel />} />
             <Route path="/reset-password" element={<AuthCarousel />} />
           </Routes>
-        </div>
-      </Router>
+          </div>
+        </Router>
+      </AuthProvider>
     </Auth0Provider>
   );
 }

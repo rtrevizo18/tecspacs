@@ -1,41 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import StickyNote from "../components/StickyNote";
 import OutlineButton from "../components/OutlineButton";
-import {
-  getUserById,
-  mockSnippets,
-  getCurrentUser,
-  mockTECs,
-  mockPACs,
-  getTECById,
-  getPACById,
-} from "../data/mockData";
+import { getUserById } from "../data/mockData";
 import DashedLine from "../components/DashedLine";
+import { useAuthContext } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
+import { TEC, PAC, User } from "../types";
 
 const UserProfile: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
-  const user = getUserById(uid || "");
-  const currentUser = getCurrentUser();
+  const { currentUser } = useAuthContext();
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const [userTECs, setUserTECs] = useState<TEC[]>([]);
+  const [userPACs, setUserPACs] = useState<PAC[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check if this is the current user's own profile
+  // We need to compare after we fetch the profile data
   const isOwnProfile =
-    currentUser?.id === user?.id || currentUser?.auth0Id === user?.auth0Id;
+    currentUser &&
+    profileUser &&
+    (currentUser.auth0Id === profileUser.auth0Id ||
+      currentUser._id === profileUser._id ||
+      currentUser.id === profileUser.id);
 
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [editedBio, setEditedBio] = useState(user?.bio || "");
-  const [pinnedTECs, setPinnedTECs] = useState<string[]>(
-    user?.createdTECs?.slice(0, 3) || []
-  );
-  const [pinnedPACs, setPinnedPACs] = useState<string[]>(
-    user?.createdPACs?.slice(0, 2) || []
-  );
+  const [editedBio, setEditedBio] = useState("");
+  const [pinnedTECs, setPinnedTECs] = useState<string[]>([]);
+  const [pinnedPACs, setPinnedPACs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"tecs" | "pacs">("tecs");
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!uid) return;
+
+      setIsLoading(true);
+      try {
+        let userIdToFetch = uid;
+
+        // If the URL parameter matches current user's auth0Id, use their _id instead
+        if (
+          currentUser &&
+          (uid === currentUser.auth0Id || uid === currentUser.id)
+        ) {
+          userIdToFetch = currentUser._id;
+        }
+
+        // Use the new user endpoints to fetch TECs and PACs for any user
+        const [userTecsResponse, userPacsResponse] = await Promise.all([
+          apiService.getUserTecs(userIdToFetch),
+          apiService.getUserPacs(userIdToFetch),
+        ]);
+
+        // The API returns both user info and their TECs/PACs
+        const user = userTecsResponse.user; // Both responses should have the same user data
+        const tecs = userTecsResponse.tecs;
+        const pacs = userPacsResponse.pacs;
+
+        // Transform backend user to include legacy compatibility fields
+        const transformedUser: User = {
+          ...user,
+          id: user._id, // Legacy compatibility
+          name: user.username, // Legacy compatibility
+          createdTECs: tecs.map((tec) => tec._id), // Extract TEC IDs
+          createdPACs: pacs.map((pac) => pac._id), // Extract PAC IDs
+          createdSnippets: tecs.map((tec) => tec._id), // Legacy compatibility
+        };
+
+        setProfileUser(transformedUser);
+        setEditedBio(transformedUser.bio || "");
+        setUserTECs(tecs);
+        setUserPACs(pacs);
+
+        // Set pinned items (first few items as featured)
+        setPinnedTECs(tecs.slice(0, 3).map((tec) => tec._id));
+        setPinnedPACs(pacs.slice(0, 2).map((pac) => pac._id));
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+
+        // If viewing own profile and API fails, fall back to current user data
+        if (
+          currentUser &&
+          (uid === currentUser.auth0Id ||
+            uid === currentUser.id ||
+            uid === currentUser._id)
+        ) {
+          setProfileUser(currentUser);
+          setEditedBio(currentUser.bio || "");
+          // Use empty arrays since we couldn't fetch from API
+          setUserTECs([]);
+          setUserPACs([]);
+        } else {
+          // Fallback to mock data for other users
+          const mockUser = getUserById(uid || "");
+          if (mockUser) {
+            setProfileUser(mockUser);
+            setEditedBio(mockUser.bio || "");
+            setUserTECs([]);
+            setUserPACs([]);
+          }
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [uid, currentUser]);
 
   const handleSaveBio = () => {
     setIsEditingBio(false);
   };
 
   const handleCancelBio = () => {
-    setEditedBio(user?.bio || "");
+    setEditedBio(profileUser?.bio || "");
     setIsEditingBio(false);
   };
 
@@ -47,7 +126,19 @@ const UserProfile: React.FC = () => {
     setPinnedPACs((prev) => prev.filter((id) => id !== pacId));
   };
 
-  if (!user) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="container mx-auto max-w-6xl pt-20">
+          <StickyNote variant="blue" className="text-center">
+            <p>Loading profile...</p>
+          </StickyNote>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profileUser) {
     return (
       <div className="min-h-screen p-4">
         <div className="container mx-auto max-w-6xl pt-20">
@@ -60,14 +151,6 @@ const UserProfile: React.FC = () => {
       </div>
     );
   }
-
-  // Filter user's TECs and PACs
-  const userTECs = mockTECs.filter(
-    (tec) => tec.author === (user.auth0Id || user.id)
-  );
-  const userPACs = mockPACs.filter(
-    (pac) => pac.author === (user.auth0Id || user.id)
-  );
 
   // Current items based on active tab
   const currentItems = activeTab === "tecs" ? userTECs : userPACs;
@@ -90,10 +173,12 @@ const UserProfile: React.FC = () => {
     ? userTECs.slice(Math.min(3, userTECs.length))
     : userPACs.slice(Math.min(3, userPACs.length));
 
-  // Legacy snippet data for compatibility
-  const userSnippets = mockSnippets.filter(
-    (snippet) => snippet.authorId === (user.id || user.auth0Id)
-  );
+  // Get user display name
+  const getUserDisplayName = () => {
+    return (
+      profileUser.name || profileUser.username || profileUser.email || "User"
+    );
+  };
 
   return (
     <div className="min-h-screen p-4">
@@ -103,7 +188,7 @@ const UserProfile: React.FC = () => {
           <div className="flex-shrink-0">
             <div className="w-32 h-32 bg-pen-black rounded-full flex items-center justify-center">
               <span className="text-white text-4xl font-bold">
-                {user.name.charAt(0).toUpperCase()}
+                {getUserDisplayName().charAt(0).toUpperCase()}
               </span>
             </div>
           </div>
@@ -111,7 +196,7 @@ const UserProfile: React.FC = () => {
           {/* Username and Bio - Right */}
           <div className="flex-1">
             <h1 className="text-4xl font-bold text-pen-black mb-4">
-              {user.name}
+              {getUserDisplayName()}
             </h1>
 
             <StickyNote variant="blue" size="medium">
@@ -143,7 +228,11 @@ const UserProfile: React.FC = () => {
                 </div>
               ) : (
                 <div className="relative">
-                  <DashedLine text={user.bio || "No bio available"} />
+                  <DashedLine
+                    text={
+                      profileUser.bio || "Just a lil dev trying their best 🧃"
+                    }
+                  />
                   {isOwnProfile && (
                     <OutlineButton
                       variant="secondary"
@@ -171,7 +260,8 @@ const UserProfile: React.FC = () => {
               }`}
             >
               <img src="/tec.png" alt="TEC" className="w-4 h-4" />
-              {isOwnProfile ? "My TECs" : "TECs"} ({userTECs.length})
+              {isOwnProfile ? "My TECs" : `${getUserDisplayName()}'s TECs`} (
+              {userTECs.length})
             </button>
 
             <button
@@ -183,7 +273,8 @@ const UserProfile: React.FC = () => {
               }`}
             >
               <img src="/pac.png" alt="PAC" className="w-4 h-4" />
-              {isOwnProfile ? "My PACs" : "PACs"} ({userPACs.length})
+              {isOwnProfile ? "My PACs" : `${getUserDisplayName()}'s PACs`} (
+              {userPACs.length})
             </button>
           </div>
         </div>
@@ -196,7 +287,7 @@ const UserProfile: React.FC = () => {
               </h2>
               <div className="flex-1 h-px border-t border-dashed border-pen-black"></div>
             </div>
-            <StickyNote variant="green">
+            <StickyNote variant="default">
               <div className="space-y-1">
                 {featuredItems.map((item) => (
                   <div key={item._id} className="flex items-center gap-2">

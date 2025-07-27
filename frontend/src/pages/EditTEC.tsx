@@ -1,14 +1,15 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import StickyNote from "../components/StickyNote";
 import NotebookInput from "../components/NotebookInput";
 import OutlineButton from "../components/OutlineButton";
 import LanguageTag from "../components/LanguageTag";
 import { useAuthContext } from "../contexts/AuthContext";
 import { apiService } from "../services/api";
-// import { TEC } from "../types"; // Unused - TEC structure defined by API
+import { TEC } from "../types";
 
-const NewTEC: React.FC = () => {
+const EditTEC: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser, accessToken } = useAuthContext();
   
@@ -20,7 +21,9 @@ const NewTEC: React.FC = () => {
   const [isPublic, setIsPublic] = useState(true);
   const [newTag, setNewTag] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const commonLanguages = [
     "javascript", "typescript", "python", "css", "html", "react", 
@@ -31,6 +34,45 @@ const NewTEC: React.FC = () => {
     "react", "typescript", "component", "hook", "api", "tutorial", 
     "example", "utility", "helper", "database", "frontend", "backend"
   ];
+
+  // Fetch TEC data on component mount
+  useEffect(() => {
+    const fetchTEC = async () => {
+      if (!id) {
+        setError("No TEC ID provided");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        console.log("Fetching TEC with ID:", id);
+        const tec = await apiService.getTecById(id);
+        console.log("Fetched TEC for editing:", tec);
+        
+        // Check if current user owns this TEC
+        if (currentUser && tec.createdBy._id !== currentUser._id) {
+          setError("You don't have permission to edit this TEC");
+          setIsLoading(false);
+          return;
+        }
+
+        // Populate form with TEC data
+        setTitle(tec.title);
+        setDescription(tec.description);
+        setContent(tec.content);
+        setLanguage(tec.language);
+        setTags(tec.tags);
+        setIsPublic(tec.isPublic ?? true);
+      } catch (error) {
+        console.error('Error fetching TEC:', error);
+        setError('Failed to load TEC');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTEC();
+  }, [id, currentUser]);
 
   const handleAddTag = (tag: string) => {
     if (tag.trim() && !tags.includes(tag.trim())) {
@@ -46,12 +88,12 @@ const NewTEC: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createTEC();
+    updateTEC();
   };
 
-  const createTEC = async () => {
-    if (!currentUser || !accessToken) {
-      alert("Please log in to create a TEC");
+  const updateTEC = async () => {
+    if (!currentUser || !accessToken || !id) {
+      alert("Please log in to update this TEC");
       return;
     }
 
@@ -60,31 +102,37 @@ const NewTEC: React.FC = () => {
       return;
     }
 
-    setIsCreating(true);
+    setIsUpdating(true);
     
     try {
-      const newTECData = {
+      // Ensure tags is always an array and filter out empty strings
+      const cleanTags = tags.filter(tag => tag && tag.trim()).map(tag => tag.trim());
+      
+      const updatedTECData = {
         title: title.trim(),
         description: description.trim(),
         content: content.trim(),
         language: language.trim(),
-        tags: tags,
+        tags: cleanTags,
       };
 
-      console.log("Creating TEC:", newTECData);
+      console.log("Updating TEC with ID:", id);
+      console.log("ID type:", typeof id);
+      console.log("TEC data being sent:", updatedTECData);
+      console.log("Tags array:", cleanTags);
       
-      const createdTEC = await apiService.createTec(accessToken, newTECData);
+      const updatedTEC = await apiService.updateTec(accessToken, id, updatedTECData);
       
-      console.log("TEC created successfully:", createdTEC);
-      alert("TEC created successfully!");
+      console.log("TEC updated successfully:", updatedTEC);
+      alert("TEC updated successfully!");
       
-      // Navigate to the newly created TEC
-      navigate(`/view/${createdTEC._id}`);
+      // Navigate back to the TEC view page
+      navigate(`/view/${id}`);
     } catch (error) {
-      console.error("Error creating TEC:", error);
-      alert("Failed to create TEC. Please try again.");
+      console.error("Error updating TEC:", error);
+      alert("Failed to update TEC. Please try again.");
     } finally {
-      setIsCreating(false);
+      setIsUpdating(false);
     }
   };
 
@@ -94,8 +142,39 @@ const NewTEC: React.FC = () => {
         <div className="container mx-auto max-w-4xl pt-20">
           <StickyNote variant="pink" className="text-center">
             <h1 className="text-2xl font-bold text-pen-black">
-              Please log in to create a TEC
+              Please log in to edit a TEC
             </h1>
+          </StickyNote>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="container mx-auto max-w-4xl pt-20">
+          <StickyNote variant="blue" className="text-center">
+            <h1 className="text-2xl font-bold text-pen-black">
+              Loading TEC...
+            </h1>
+          </StickyNote>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="container mx-auto max-w-4xl pt-20">
+          <StickyNote variant="pink" className="text-center">
+            <h1 className="text-2xl font-bold text-pen-black mb-4">
+              {error}
+            </h1>
+            <OutlineButton onClick={() => navigate('/')}>
+              Go to Dashboard
+            </OutlineButton>
           </StickyNote>
         </div>
       </div>
@@ -105,7 +184,7 @@ const NewTEC: React.FC = () => {
   return (
     <div className="min-h-screen p-4">
       <div className="container mx-auto max-w-4xl pt-20">
-        <h1 className="text-3xl font-bold text-pen-black mb-6">Create New TEC</h1>
+        <h1 className="text-3xl font-bold text-pen-black mb-6">Edit TEC</h1>
         
         <form onSubmit={handleSubmit}>
           <StickyNote variant="default" className="mb-6">
@@ -174,7 +253,7 @@ const NewTEC: React.FC = () => {
                         type="text"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) => {
+                        onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             handleAddTag(newTag);
@@ -250,14 +329,14 @@ const NewTEC: React.FC = () => {
                   size="medium"
                   onClick={() => {}}
                   type="submit"
-                  disabled={isCreating}
+                  disabled={isUpdating}
                 >
-                  {isCreating ? "Creating..." : "Create TEC"}
+                  {isUpdating ? "Updating..." : "Update TEC"}
                 </OutlineButton>
                 <OutlineButton 
                   variant="secondary" 
                   size="medium"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate(`/view/${id}`)}
                   type="button"
                 >
                   Cancel
@@ -271,4 +350,4 @@ const NewTEC: React.FC = () => {
   );
 };
 
-export default NewTEC;
+export default EditTEC;

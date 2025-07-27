@@ -2,53 +2,21 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import OutlineButton from "./OutlineButton";
-import { apiService } from "../services/api";
-import { User } from "../types";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const Navigation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const {
     isAuthenticated,
     isLoading,
     loginWithRedirect,
     logout,
-    getAccessTokenSilently,
     user,
   } = useAuth0();
+  const { currentUser } = useAuthContext();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (isAuthenticated && user) {
-        try {
-          const accessToken = await getAccessTokenSilently();
-          const backendUser = await apiService.getCurrentUser(accessToken);
-          setCurrentUser(backendUser);
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          if (error === "UNAUTHORIZED") {
-            logout();
-          } else {
-            // TEMPORARILY DISABLED: If backend user doesn't exist, redirect to profile setup
-            // console.log('User not found in backend, redirecting to profile setup');
-            // navigate('/setup-profile');
-
-            // For now, just log the error and continue without backend user
-            console.log(
-              "Backend user not found, continuing with Auth0 user data only"
-            );
-          }
-        }
-      } else {
-        setCurrentUser(null);
-      }
-    };
-
-    fetchUser();
-  }, [isAuthenticated, user, getAccessTokenSilently, logout, navigate]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -6,7 +6,10 @@ export interface TEC {
   language: string;
   content: string; // renamed from 'code'
   tags: string[];
-  author: string; // Auth0 user ID
+  createdBy: {
+    _id: string;
+    username: string;
+  }; // User object from backend
   createdAt: string; // ISO string from backend
   updatedAt: string; // ISO string from backend
   isPublic?: boolean; // optional, defaults to true
@@ -19,23 +22,31 @@ export interface PAC {
   description: string;
   dependencies: string[];
   files: string[];
-  author: string; // Auth0 user ID
+  createdBy: {
+    _id: string;
+    username: string;
+  }; // User object from backend
   createdAt: string;
   updatedAt: string;
 }
 
 // User interface - matches Auth0 + backend structure
 export interface User {
-  _id?: string; // Backend user ID (optional for new users)
+  _id: string; // Backend user ID
   auth0Id: string; // Auth0 user ID
-  name: string;
+  username: string; // Backend username
   email: string;
   bio?: string;
   avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  __v?: number; // MongoDB version field
+  // TEC/PAC arrays from backend
+  tecs: TEC[]; // Array of TEC objects
+  pacs: PAC[]; // Array of PAC objects
   // Legacy fields for backward compatibility
   id?: string;
+  name?: string; // Derived from username
   createdSnippets?: string[];
   savedSnippets?: string[];
   // New TEC/PAC fields
@@ -61,7 +72,7 @@ export interface Snippet {
 }
 
 // Helper function to convert TEC to Snippet for UI compatibility
-export function tecToSnippet(tec: TEC, authorName: string = 'Unknown'): Snippet {
+export function tecToSnippet(tec: TEC, authorName?: string): Snippet {
   return {
     id: tec._id,
     title: tec.title,
@@ -69,8 +80,8 @@ export function tecToSnippet(tec: TEC, authorName: string = 'Unknown'): Snippet 
     code: tec.content,
     language: tec.language,
     tags: tec.tags,
-    authorId: tec.author,
-    authorName: authorName,
+    authorId: tec.createdBy._id,
+    authorName: authorName || tec.createdBy.username || 'Unknown',
     createdAt: new Date(tec.createdAt),
     updatedAt: new Date(tec.updatedAt),
     isPublic: tec.isPublic ?? true,

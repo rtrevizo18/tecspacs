@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import StickyNote from "../components/StickyNote";
@@ -7,21 +7,26 @@ import LanguageTag from "../components/LanguageTag";
 import TypeBookmark from "../components/TypeBookmark";
 import OutlineButton from "../components/OutlineButton";
 import AIPanel from "../components/AIPanel";
-import {
-  getSnippetById,
-  getCurrentUser,
-  getTECById,
-  getUserById,
-} from "../data/mockData";
-import { TEC, Snippet } from "../types";
+import { getSnippetById, getUserById } from "../data/mockData";
+import { TEC, Snippet, User } from "../types";
 import DashedLine from "../components/DashedLine";
+import { useAuthContext } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
 
 const ViewSnippet: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const snippet = id ? getSnippetById(id) : null;
-  const tec = id ? getTECById(id) : null;
-  const currentUser = getCurrentUser();
+  const { currentUser, accessToken } = useAuthContext();
   const navigate = useNavigate();
+  
+  // State for real TEC data
+  const [tec, setTec] = useState<TEC | null>(null);
+  const [tecAuthor, setTecAuthor] = useState<User | null>(null);
+  const [userTecs, setUserTecs] = useState<TEC[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fallback to legacy snippet data for backward compatibility
+  const snippet = id ? getSnippetById(id) : null;
 
   // AI Results State
   const [aiResults, setAiResults] = useState<
@@ -33,24 +38,112 @@ const ViewSnippet: React.FC = () => {
     }>
   >([]);
 
+  // Fetch TEC data from API
+  useEffect(() => {
+    const fetchTEC = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Try to fetch as TEC first
+        const fetchedTec = await apiService.getTecById(id);
+        setTec(fetchedTec);
+        
+        // Extract author info from createdBy object - no need for separate API call
+        setTecAuthor({
+          _id: fetchedTec.createdBy._id,
+          auth0Id: fetchedTec.createdBy._id,
+          username: fetchedTec.createdBy.username,
+          email: '',
+          createdAt: '',
+          updatedAt: '',
+          tecs: [],
+          pacs: []
+        });
+
+        // Fetch user's other TECs
+        try {
+          const userTecsResponse = await apiService.getUserTecs(fetchedTec.createdBy._id);
+          // Filter out the current TEC and show only other TECs
+          const otherTecs = userTecsResponse.tecs.filter(t => t._id !== fetchedTec._id);
+          setUserTecs(otherTecs);
+        } catch (tecsError) {
+          console.warn('Could not fetch user TECs:', tecsError);
+          setUserTecs([]);
+        }
+        
+      } catch (error) {
+        console.error('Error fetching TEC:', error);
+        setError('TEC not found');
+        // Don't set tec to null here - let it fall back to snippet data
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTEC();
+  }, [id]);
+
+  const handleDeleteTEC = async () => {
+    if (!tec || !currentUser) return;
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${tec.title}"? This action cannot be undone.`
+    );
+    
+    if (!confirmDelete) return;
+    
+    try {
+      if (!accessToken) {
+        alert('Please log in to delete this TEC');
+        return;
+      }
+      
+      await apiService.deleteTec(accessToken, tec._id);
+      alert('TEC deleted successfully');
+      navigate('/'); // Navigate back to dashboard
+    } catch (error) {
+      console.error('Error deleting TEC:', error);
+      alert('Failed to delete TEC. Please try again.');
+    }
+  };
+
   // Determine what type of content we're viewing
-  const content = snippet || tec;
-  const isLegacySnippet = !!snippet;
+  const content = tec || snippet; // Prioritize TEC data over legacy snippet
+  const isLegacySnippet = !tec && !!snippet;
   const isTEC = !!tec;
 
-  // Look up author for TECs
-  const tecAuthor = isTEC ? getUserById((content as TEC).author) : null;
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <StickyNote variant="blue">
+          <h2 className="text-xl font-bold text-text-primary mb-2">
+            Loading TEC...
+          </h2>
+        </StickyNote>
+      </div>
+    );
+  }
 
+  // Show error or not found
   if (!content) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
         <StickyNote variant="pink">
           <h2 className="text-xl font-bold text-text-primary mb-2">
-            Snippet Not Found
+            {error || "Snippet Not Found"}
           </h2>
           <p className="text-text-accent">
             The snippet you're looking for doesn't exist or has been removed.
           </p>
+          {error && (
+            <p className="text-text-accent text-sm mt-2">
+              Error: {error}
+            </p>
+          )}
         </StickyNote>
       </div>
     );
@@ -62,8 +155,8 @@ const ViewSnippet: React.FC = () => {
       (currentUser.id === (content as Snippet).authorId ||
         currentUser.auth0Id === (content as Snippet).authorId)) ||
       (isTEC &&
-        (currentUser.id === (content as TEC).author ||
-          currentUser.auth0Id === (content as TEC).author)));
+        (currentUser.id === (content as TEC).createdBy._id ||
+          currentUser.auth0Id === (content as TEC).createdBy._id)));
   const isSaved =
     currentUser &&
     isLegacySnippet &&
@@ -79,26 +172,26 @@ const ViewSnippet: React.FC = () => {
               to={`/user/${
                 isLegacySnippet
                   ? (content as Snippet).authorId
-                  : (content as TEC).author
+                  : (content as TEC).createdBy._id
               }`}
             >
               <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
                 {isLegacySnippet
                   ? (content as Snippet).authorName.charAt(0).toUpperCase()
-                  : tecAuthor?.name.charAt(0).toUpperCase() || "U"}
+                  : (tecAuthor?.username || tecAuthor?.name || tecAuthor?.email || tecAuthor?._id || "U").charAt(0).toUpperCase()}
               </div>
             </Link>
             <Link
               to={`/user/${
                 isLegacySnippet
                   ? (content as Snippet).authorId
-                  : (content as TEC).author
+                  : (content as TEC).createdBy._id
               }`}
               className="font-bold hover:underline"
             >
               {isLegacySnippet
                 ? (content as Snippet).authorName
-                : tecAuthor?.name || "Unknown"}
+                : tecAuthor?.username || tecAuthor?.name || tecAuthor?.email || tecAuthor?._id || "Unknown User"}
             </Link>
             <span>
               {formatDistanceToNow(
@@ -134,19 +227,17 @@ const ViewSnippet: React.FC = () => {
               <>
                 <OutlineButton
                   size="small"
-                  onClick={() =>
-                    navigate(
-                      `/edit/${
-                        isLegacySnippet
-                          ? (content as Snippet).id
-                          : (content as TEC)._id
-                      }`
-                    )
-                  }
+                  onClick={() => {
+                    if (isTEC) {
+                      navigate(`/edit-tec/${(content as TEC)._id}`);
+                    } else {
+                      navigate(`/edit/${(content as Snippet).id}`);
+                    }
+                  }}
                 >
                   Edit
                 </OutlineButton>
-                <OutlineButton size="small" variant="danger" onClick={() => {}}>
+                <OutlineButton size="small" variant="danger" onClick={handleDeleteTEC}>
                   Delete
                 </OutlineButton>
               </>
@@ -226,45 +317,72 @@ const ViewSnippet: React.FC = () => {
             More from{" "}
             {isLegacySnippet
               ? (content as Snippet).authorName
-              : tecAuthor?.name || "Unknown"}
+              : tecAuthor?.username || tecAuthor?.name || tecAuthor?.email || tecAuthor?._id || "Unknown User"}
           </h3>
           <div className="space-y-2">
-            <Link
-              to="/view/mock-1"
-              className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
-            >
-              <div className="flex items-center gap-2 flex-1">
-                <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
-                <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
-                  React Custom Hook for API
-                </span>
+            {!isLegacySnippet && userTecs.length > 0 ? (
+              userTecs.slice(0, 3).map((userTec) => (
+                <Link
+                  key={userTec._id}
+                  to={`/view/${userTec._id}`}
+                  className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
+                    <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
+                      {userTec.title}
+                    </span>
+                  </div>
+                  <span className="text-text-accent text-xs ml-2">
+                    {formatDistanceToNow(new Date(userTec.createdAt))} ago
+                  </span>
+                </Link>
+              ))
+            ) : !isLegacySnippet ? (
+              <div className="flex items-center justify-center text-text-accent text-sm py-4">
+                <span>Coming soon...</span>
               </div>
-              <span className="text-text-accent text-xs ml-2">2 days ago</span>
-            </Link>
-            <Link
-              to="/view/mock-2"
-              className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
-            >
-              <div className="flex items-center gap-2 flex-1">
-                <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
-                <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
-                  Express.js Basic Server Setup
-                </span>
-              </div>
-              <span className="text-text-accent text-xs ml-2">1 week ago</span>
-            </Link>
-            <Link
-              to="/view/mock-3"
-              className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
-            >
-              <div className="flex items-center gap-2 flex-1">
-                <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
-                <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
-                  Python List Comprehension Examples
-                </span>
-              </div>
-              <span className="text-text-accent text-xs ml-2">2 weeks ago</span>
-            </Link>
+            ) : (
+              // Legacy snippet fallback - keep existing hardcoded data for now
+              <>
+                <Link
+                  to="/view/mock-1"
+                  className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
+                    <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
+                      React Custom Hook for API
+                    </span>
+                  </div>
+                  <span className="text-text-accent text-xs ml-2">2 days ago</span>
+                </Link>
+                <Link
+                  to="/view/mock-2"
+                  className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
+                    <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
+                      Express.js Basic Server Setup
+                    </span>
+                  </div>
+                  <span className="text-text-accent text-xs ml-2">1 week ago</span>
+                </Link>
+                <Link
+                  to="/view/mock-3"
+                  className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
+                    <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
+                      Python List Comprehension Examples
+                    </span>
+                  </div>
+                  <span className="text-text-accent text-xs ml-2">2 weeks ago</span>
+                </Link>
+              </>
+            )}
           </div>
         </StickyNote>
       </div>

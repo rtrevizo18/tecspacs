@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import StickyNote from "../components/StickyNote";
 import NotebookInput from "../components/NotebookInput";
 import OutlineButton from "../components/OutlineButton";
@@ -7,9 +7,10 @@ import LanguageTag from "../components/LanguageTag";
 import DashedLine from "../components/DashedLine";
 import { useAuthContext } from "../contexts/AuthContext";
 import { apiService } from "../services/api";
-// import { PAC } from "../types"; // Unused - PAC structure defined by API
+import { PAC } from "../types";
 
-const NewPAC: React.FC = () => {
+const EditPAC: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser, accessToken } = useAuthContext();
   
@@ -19,7 +20,9 @@ const NewPAC: React.FC = () => {
   const [files, setFiles] = useState<string[]>([]);
   const [customDependency, setCustomDependency] = useState("");
   const [customFile, setCustomFile] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const commonDependencies = [
     "react", "typescript", "@types/react", "express", "mongoose", 
@@ -30,6 +33,41 @@ const NewPAC: React.FC = () => {
     "index.ts", "package.json", "README.md", "tsconfig.json", 
     "webpack.config.js", "babel.config.js", ".gitignore", "Dockerfile"
   ];
+
+  // Fetch PAC data on component mount
+  useEffect(() => {
+    const fetchPAC = async () => {
+      if (!id) {
+        setError("No PAC ID provided");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const pac = await apiService.getPacById(id);
+        
+        // Check if current user owns this PAC
+        if (currentUser && pac.createdBy._id !== currentUser._id) {
+          setError("You don't have permission to edit this PAC");
+          setIsLoading(false);
+          return;
+        }
+
+        // Populate form with PAC data
+        setName(pac.name);
+        setDescription(pac.description);
+        setDependencies(pac.dependencies);
+        setFiles(pac.files);
+      } catch (error) {
+        console.error('Error fetching PAC:', error);
+        setError('Failed to load PAC');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPAC();
+  }, [id, currentUser]);
 
   const handleAddDependency = (dependency: string) => {
     if (dependency.trim() && !dependencies.includes(dependency.trim())) {
@@ -81,12 +119,12 @@ const NewPAC: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createPAC();
+    updatePAC();
   };
 
-  const createPAC = async () => {
-    if (!currentUser || !accessToken) {
-      alert("Please log in to create a PAC");
+  const updatePAC = async () => {
+    if (!currentUser || !accessToken || !id) {
+      alert("Please log in to update this PAC");
       return;
     }
 
@@ -95,30 +133,30 @@ const NewPAC: React.FC = () => {
       return;
     }
 
-    setIsCreating(true);
+    setIsUpdating(true);
 
     try {
-      const newPACData = {
+      const updatedPACData = {
         name: name.trim(),
         description: description.trim(),
         dependencies: dependencies,
         files: files,
       };
 
-      console.log("Creating PAC:", newPACData);
+      console.log("Updating PAC:", updatedPACData);
       
-      const createdPAC = await apiService.createPac(accessToken, newPACData);
+      const updatedPAC = await apiService.updatePac(accessToken, id, updatedPACData);
       
-      console.log("PAC created successfully:", createdPAC);
-      alert("PAC created successfully!");
+      console.log("PAC updated successfully:", updatedPAC);
+      alert("PAC updated successfully!");
       
-      // Navigate to the newly created PAC
-      navigate(`/view-pac/${createdPAC._id}`);
+      // Navigate back to the PAC view page
+      navigate(`/view-pac/${id}`);
     } catch (error) {
-      console.error("Error creating PAC:", error);
-      alert("Failed to create PAC. Please try again.");
+      console.error("Error updating PAC:", error);
+      alert("Failed to update PAC. Please try again.");
     } finally {
-      setIsCreating(false);
+      setIsUpdating(false);
     }
   };
 
@@ -128,8 +166,39 @@ const NewPAC: React.FC = () => {
         <div className="container mx-auto max-w-4xl pt-20">
           <StickyNote variant="pink" className="text-center">
             <h1 className="text-2xl font-bold text-pen-black">
-              Please log in to create a PAC
+              Please log in to edit a PAC
             </h1>
+          </StickyNote>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="container mx-auto max-w-4xl pt-20">
+          <StickyNote variant="blue" className="text-center">
+            <h1 className="text-2xl font-bold text-pen-black">
+              Loading PAC...
+            </h1>
+          </StickyNote>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="container mx-auto max-w-4xl pt-20">
+          <StickyNote variant="pink" className="text-center">
+            <h1 className="text-2xl font-bold text-pen-black mb-4">
+              {error}
+            </h1>
+            <OutlineButton onClick={() => navigate('/')}>
+              Go to Dashboard
+            </OutlineButton>
           </StickyNote>
         </div>
       </div>
@@ -139,7 +208,7 @@ const NewPAC: React.FC = () => {
   return (
     <div className="min-h-screen p-4">
       <div className="container mx-auto max-w-4xl pt-20">
-        <h1 className="text-3xl font-bold text-pen-black mb-6">Create New PAC</h1>
+        <h1 className="text-3xl font-bold text-pen-black mb-6">Edit PAC</h1>
         
         <form onSubmit={handleSubmit}>
           <StickyNote variant="blue" className="mb-6">
@@ -289,14 +358,14 @@ const NewPAC: React.FC = () => {
                   size="medium"
                   onClick={() => {}}
                   type="submit"
-                  disabled={isCreating}
+                  disabled={isUpdating}
                 >
-                  {isCreating ? "Creating..." : "Create PAC"}
+                  {isUpdating ? "Updating..." : "Update PAC"}
                 </OutlineButton>
                 <OutlineButton 
                   variant="secondary" 
                   size="medium"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate(`/view-pac/${id}`)}
                   type="button"
                 >
                   Cancel
@@ -310,4 +379,4 @@ const NewPAC: React.FC = () => {
   );
 };
 
-export default NewPAC;
+export default EditPAC;
