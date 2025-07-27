@@ -1,0 +1,14 @@
+{
+  "name": "tecspacs",
+  "version": "1.0.0",
+  "description": "Tecspacs Full Stack Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "install-backend": "cd backend && npm install",
+    "dev": "cd backend && npm run dev"
+  },
+  "keywords": ["tecspacs", "fullstack", "api"],
+  "author": "Tecspacs Team",
+  "license": "ISC"
+} 
