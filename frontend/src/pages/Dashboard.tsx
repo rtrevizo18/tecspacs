@@ -1,14 +1,46 @@
-import React, { useState } from "react";
-import { mockTECs, mockPACs, getUserById } from "../data/mockData";
+import React, { useState, useEffect } from "react";
 import ItemCard from "../components/ItemCard";
 import Sidebar from "../components/Sidebar";
+import LoadingCard from "../components/LoadingCard";
+import { apiService } from "../services/api";
+import { TEC, PAC } from "../types";
 
 const Dashboard: React.FC = () => {
   const [filter, setFilter] = useState<"all" | "tecs" | "pacs">("all");
+  const [allTECs, setAllTECs] = useState<TEC[]>([]);
+  const [allPACs, setAllPACs] = useState<PAC[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get all items and filter them
-  const allTECs = mockTECs.filter((tec) => tec.isPublic !== false);
-  const allPACs = mockPACs;
+  // Fetch all TECs and PACs from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const [tecsResponse, pacsResponse] = await Promise.all([
+          apiService.getAllTecs(),
+          apiService.getAllPacs()
+        ]);
+        
+        // Filter out private TECs (only show public ones)
+        const publicTECs = tecsResponse.filter((tec) => tec.isPublic !== false);
+        setAllTECs(publicTECs);
+        setAllPACs(pacsResponse);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load data');
+        // Keep empty arrays on error
+        setAllTECs([]);
+        setAllPACs([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const getFilteredItems = () => {
     const tecItems = allTECs.map((tec) => ({
@@ -65,7 +97,7 @@ const Dashboard: React.FC = () => {
                       : "bg-white text-pen-black hover:bg-gray-50"
                   }`}
                 >
-                  All ({allTECs.length + allPACs.length})
+                  All ({isLoading ? "..." : allTECs.length + allPACs.length})
                 </button>
                 <button
                   onClick={() => setFilter("tecs")}
@@ -76,7 +108,7 @@ const Dashboard: React.FC = () => {
                   }`}
                 >
                   <img src="/tec.png" alt="TEC" className="w-4 h-4" />
-                  TECs ({allTECs.length})
+                  TECs ({isLoading ? "..." : allTECs.length})
                 </button>
                 <button
                   onClick={() => setFilter("pacs")}
@@ -87,7 +119,7 @@ const Dashboard: React.FC = () => {
                   }`}
                 >
                   <img src="/pac.png" alt="PAC" className="w-4 h-4" />
-                  PACs ({allPACs.length})
+                  PACs ({isLoading ? "..." : allPACs.length})
                 </button>
               </div>
             </div>
@@ -95,22 +127,26 @@ const Dashboard: React.FC = () => {
 
           {/* Items Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-6">
-            {filteredItems.length > 0 ? (
-              filteredItems.map((item) => {
-                const user = getUserById(item.author) || {
-                  name: "Unknown",
-                  auth0Id: item.author,
-                };
-                return (
-                  <ItemCard
-                    key={`${item.itemType.toLowerCase()}-${item._id}`}
-                    item={item}
-                    type={item.itemType}
-                    authorName={user?.name || "Unknown"}
-                    authorInitial={user?.name?.charAt(0).toUpperCase() || "?"}
-                  />
-                );
-              })
+            {isLoading ? (
+              <div className="col-span-full flex justify-center py-8">
+                <LoadingCard 
+                  message="Loading feed..." 
+                  variant="blue"
+                  size="medium"
+                />
+              </div>
+            ) : error ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-text-accent text-lg">{error}</p>
+              </div>
+            ) : filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <ItemCard
+                  key={`${item.itemType.toLowerCase()}-${item._id}`}
+                  item={item}
+                  type={item.itemType}
+                />
+              ))
             ) : (
               <div className="col-span-full text-center py-8">
                 <p className="text-text-accent text-lg">

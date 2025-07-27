@@ -6,19 +6,16 @@ import LanguageTag from "./LanguageTag";
 import TypeBookmark from "./TypeBookmark";
 import { TEC, PAC } from "../types";
 import DashedLine from "./DashedLine";
+import { getCreatedByDisplayName, getCreatedByDisplayInitial } from "../utils/userUtils";
 
 interface ItemCardProps {
   item: TEC | PAC;
   type: 'TEC' | 'PAC';
-  authorName: string;
-  authorInitial?: string;
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({
   item,
   type,
-  authorName,
-  authorInitial,
 }) => {
   const truncateTitle = (title: string, maxLength: number = 50) => {
     return title.length > maxLength
@@ -43,21 +40,25 @@ const ItemCard: React.FC<ItemCardProps> = ({
   const isPAC = type === 'PAC';
   const tecItem = item as TEC;
   const pacItem = item as PAC;
+  
+  // Get display name and initial using utility functions
+  const displayName = getCreatedByDisplayName(item.createdBy);
+  const displayInitial = getCreatedByDisplayInitial(item.createdBy);
 
   return (
     <div>
       <div className="flex items-center justify-between text-sm text-text-accent mb-2">
         <div className="flex items-center gap-2">
-          <Link to={`/user/${item.author}`}>
+          <Link to={`/user/${item.createdBy._id}`}>
             <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
-              {authorInitial}
+              {displayInitial}
             </div>
           </Link>
           <Link
-            to={`/user/${item.author}`}
+            to={`/user/${item.createdBy._id}`}
             className="font-bold hover:underline"
           >
-            {authorName}
+            {displayName}
           </Link>
           <span>{formatDistanceToNow(new Date(item.createdAt))} ago</span>
         </div>

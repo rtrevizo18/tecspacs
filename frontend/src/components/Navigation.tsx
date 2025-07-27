@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import OutlineButton from "./OutlineButton";
 import { useAuthContext } from "../contexts/AuthContext";
+import { getDisplayName, getDisplayInitial } from "../utils/userUtils";
 
 const Navigation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,15 +95,11 @@ const Navigation: React.FC = () => {
                 >
                   <div className="w-8 h-8 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold">
-                      {(currentUser?.name || user?.name || user?.email)
-                        ?.charAt(0)
-                        ?.toUpperCase()}
+                      {getDisplayInitial(currentUser || user || {})}
                     </span>
                   </div>
                   <span className="text-text-primary font-medium">
-                    {currentUser?.name ||
-                      user?.name ||
-                      user?.email?.split("@")[0]}
+                    {getDisplayName(currentUser || user || {})}
                   </span>
                   <svg
                     className={`w-4 h-4 transition-transform ${

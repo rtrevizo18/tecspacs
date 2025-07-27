@@ -18,6 +18,7 @@ import Callback from "./pages/Callback";
 import SetupProfile from "./pages/SetupProfile";
 import { auth0Config } from "./config/auth0";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
 
 function App() {
   // Apply pen cursor to the entire app
@@ -34,7 +35,8 @@ function App() {
       }}
     >
       <AuthProvider>
-        <Router>
+        <ToastProvider>
+          <Router>
           <div className="App">
             <Navigation />
             <Routes>
@@ -56,7 +58,8 @@ function App() {
             <Route path="/reset-password" element={<AuthCarousel />} />
           </Routes>
           </div>
-        </Router>
+          </Router>
+        </ToastProvider>
       </AuthProvider>
     </Auth0Provider>
   );

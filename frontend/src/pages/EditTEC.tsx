@@ -5,6 +5,7 @@ import NotebookInput from "../components/NotebookInput";
 import OutlineButton from "../components/OutlineButton";
 import LanguageTag from "../components/LanguageTag";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
 import { TEC } from "../types";
 
@@ -12,6 +13,7 @@ const EditTEC: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -93,12 +95,12 @@ const EditTEC: React.FC = () => {
 
   const updateTEC = async () => {
     if (!currentUser || !accessToken || !id) {
-      alert("Please log in to update this TEC");
+      showError("Please log in to update this TEC");
       return;
     }
 
     if (!title.trim() || !description.trim() || !content.trim() || !language.trim()) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -124,13 +126,13 @@ const EditTEC: React.FC = () => {
       const updatedTEC = await apiService.updateTec(accessToken, id, updatedTECData);
       
       console.log("TEC updated successfully:", updatedTEC);
-      alert("TEC updated successfully!");
+      showSuccess("TEC updated successfully!");
       
       // Navigate back to the TEC view page
       navigate(`/view/${id}`);
     } catch (error) {
       console.error("Error updating TEC:", error);
-      alert("Failed to update TEC. Please try again.");
+      showError("Failed to update TEC. Please try again.");
     } finally {
       setIsUpdating(false);
     }

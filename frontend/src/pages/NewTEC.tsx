@@ -5,12 +5,14 @@ import NotebookInput from "../components/NotebookInput";
 import OutlineButton from "../components/OutlineButton";
 import LanguageTag from "../components/LanguageTag";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
 // import { TEC } from "../types"; // Unused - TEC structure defined by API
 
 const NewTEC: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -51,12 +53,12 @@ const NewTEC: React.FC = () => {
 
   const createTEC = async () => {
     if (!currentUser || !accessToken) {
-      alert("Please log in to create a TEC");
+      showError("Please log in to create a TEC");
       return;
     }
 
     if (!title.trim() || !description.trim() || !content.trim() || !language.trim()) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -76,13 +78,13 @@ const NewTEC: React.FC = () => {
       const createdTEC = await apiService.createTec(accessToken, newTECData);
       
       console.log("TEC created successfully:", createdTEC);
-      alert("TEC created successfully!");
+      showSuccess("TEC created successfully!");
       
       // Navigate to the newly created TEC
       navigate(`/view/${createdTEC._id}`);
     } catch (error) {
       console.error("Error creating TEC:", error);
-      alert("Failed to create TEC. Please try again.");
+      showError("Failed to create TEC. Please try again.");
     } finally {
       setIsCreating(false);
     }

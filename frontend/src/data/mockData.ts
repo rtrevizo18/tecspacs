@@ -25,7 +25,7 @@ const MyComponent: React.FC<Props> = ({ title, children }) => {
 export default MyComponent;`,
     language: 'typescript',
     tags: ['react', 'typescript', 'component'],
-    author: 'auth0|1',
+    createdBy: { _id: 'auth0|1', username: 'Alice Johnson' },
     createdAt: '2024-01-15T00:00:00Z',
     updatedAt: '2024-01-15T00:00:00Z',
     isPublic: true
@@ -49,7 +49,7 @@ flattened = [item for row in matrix for item in row]
 word_lengths = {word: len(word) for word in ['hello', 'world', 'python']}`,
     language: 'python',
     tags: ['python', 'comprehension', 'tutorial'],
-    author: 'auth0|1',
+    createdBy: { _id: 'auth0|1', username: 'Alice Johnson' },
     createdAt: '2024-01-12T00:00:00Z',
     updatedAt: '2024-01-12T00:00:00Z',
     isPublic: true
@@ -72,7 +72,7 @@ word_lengths = {word: len(word) for word in ['hello', 'world', 'python']}`,
 }`,
     language: 'css',
     tags: ['css', 'flexbox', 'centering'],
-    author: 'auth0|2',
+    createdBy: { _id: 'auth0|2', username: 'Bob Smith' },
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     isPublic: true
@@ -100,7 +100,7 @@ const hasEven = numbers.some(n => n % 2 === 0);
 const allPositive = numbers.every(n => n > 0);`,
     language: 'javascript',
     tags: ['javascript', 'arrays', 'methods'],
-    author: 'auth0|2',
+    createdBy: { _id: 'auth0|2', username: 'Bob Smith' },
     createdAt: '2024-01-08T00:00:00Z',
     updatedAt: '2024-01-08T00:00:00Z',
     isPublic: true
@@ -134,7 +134,7 @@ app.listen(PORT, () => {
 });`,
     language: 'javascript',
     tags: ['nodejs', 'express', 'server'],
-    author: 'auth0|1',
+    createdBy: { _id: 'auth0|1', username: 'Alice Johnson' },
     createdAt: '2024-01-05T00:00:00Z',
     updatedAt: '2024-01-05T00:00:00Z',
     isPublic: false
@@ -169,7 +169,7 @@ plt.title('Distribution of Values')
 plt.show()`,
     language: 'python',
     tags: ['python', 'pandas', 'data-analysis'],
-    author: 'auth0|3',
+    createdBy: { _id: 'auth0|3', username: 'Carol Davis' },
     createdAt: '2024-01-03T00:00:00Z',
     updatedAt: '2024-01-03T00:00:00Z',
     isPublic: true
@@ -184,7 +184,7 @@ export const mockPACs: PAC[] = [
     description: 'A collection of reusable React components with TypeScript support',
     dependencies: ['react', 'typescript', '@types/react'],
     files: ['Button.tsx', 'Input.tsx', 'Modal.tsx', 'index.ts'],
-    author: 'auth0|1',
+    createdBy: { _id: 'auth0|1', username: 'Alice Johnson' },
     createdAt: '2024-01-20T00:00:00Z',
     updatedAt: '2024-01-20T00:00:00Z'
   },
@@ -194,7 +194,7 @@ export const mockPACs: PAC[] = [
     description: 'A package of useful CSS utilities and helper classes',
     dependencies: ['postcss', 'autoprefixer'],
     files: ['utilities.css', 'variables.css', 'mixins.css'],
-    author: 'auth0|2',
+    createdBy: { _id: 'auth0|2', username: 'Bob Smith' },
     createdAt: '2024-01-18T00:00:00Z',
     updatedAt: '2024-01-18T00:00:00Z'
   },
@@ -204,7 +204,7 @@ export const mockPACs: PAC[] = [
     description: 'A collection of Python utilities for data processing and analysis',
     dependencies: ['pandas', 'numpy', 'matplotlib'],
     files: ['data_loader.py', 'cleaner.py', 'visualizer.py', '__init__.py'],
-    author: 'auth0|3',
+    createdBy: { _id: 'auth0|3', username: 'Carol Davis' },
     createdAt: '2024-01-16T00:00:00Z',
     updatedAt: '2024-01-16T00:00:00Z'
   }

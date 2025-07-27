@@ -11,19 +11,23 @@ import { getSnippetById, getUserById } from "../data/mockData";
 import { TEC, Snippet, User } from "../types";
 import DashedLine from "../components/DashedLine";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { getCreatedByDisplayName, getCreatedByDisplayInitial } from "../utils/userUtils";
 
 const ViewSnippet: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
   
   // State for real TEC data
   const [tec, setTec] = useState<TEC | null>(null);
-  const [tecAuthor, setTecAuthor] = useState<User | null>(null);
   const [userTecs, setUserTecs] = useState<TEC[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Fallback to legacy snippet data for backward compatibility
   const snippet = id ? getSnippetById(id) : null;
@@ -51,17 +55,7 @@ const ViewSnippet: React.FC = () => {
         const fetchedTec = await apiService.getTecById(id);
         setTec(fetchedTec);
         
-        // Extract author info from createdBy object - no need for separate API call
-        setTecAuthor({
-          _id: fetchedTec.createdBy._id,
-          auth0Id: fetchedTec.createdBy._id,
-          username: fetchedTec.createdBy.username,
-          email: '',
-          createdAt: '',
-          updatedAt: '',
-          tecs: [],
-          pacs: []
-        });
+        // Author info is now handled by utility functions using createdBy data
 
         // Fetch user's other TECs
         try {
@@ -89,31 +83,42 @@ const ViewSnippet: React.FC = () => {
   const handleDeleteTEC = async () => {
     if (!tec || !currentUser) return;
     
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${tec.title}"? This action cannot be undone.`
-    );
-    
-    if (!confirmDelete) return;
-    
     try {
       if (!accessToken) {
-        alert('Please log in to delete this TEC');
+        showError('Please log in to delete this TEC');
         return;
       }
       
       await apiService.deleteTec(accessToken, tec._id);
-      alert('TEC deleted successfully');
+      showSuccess('TEC deleted successfully!');
       navigate('/'); // Navigate back to dashboard
     } catch (error) {
       console.error('Error deleting TEC:', error);
-      alert('Failed to delete TEC. Please try again.');
+      showError('Failed to delete TEC. Please try again.');
     }
+  };
+
+  const confirmDelete = () => {
+    setShowDeleteConfirm(true);
   };
 
   // Determine what type of content we're viewing
   const content = tec || snippet; // Prioritize TEC data over legacy snippet
   const isLegacySnippet = !tec && !!snippet;
   const isTEC = !!tec;
+  
+  // Get display names using utility functions
+  const displayName = isTEC && tec 
+    ? getCreatedByDisplayName(tec.createdBy)
+    : isLegacySnippet && snippet 
+      ? snippet.authorName 
+      : 'Unknown User';
+      
+  const displayInitial = isTEC && tec
+    ? getCreatedByDisplayInitial(tec.createdBy)
+    : isLegacySnippet && snippet
+      ? snippet.authorName.charAt(0).toUpperCase()
+      : 'U';
 
   // Show loading state
   if (isLoading) {
@@ -176,9 +181,7 @@ const ViewSnippet: React.FC = () => {
               }`}
             >
               <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
-                {isLegacySnippet
-                  ? (content as Snippet).authorName.charAt(0).toUpperCase()
-                  : (tecAuthor?.username || tecAuthor?.name || tecAuthor?.email || tecAuthor?._id || "U").charAt(0).toUpperCase()}
+                {displayInitial}
               </div>
             </Link>
             <Link
@@ -189,9 +192,7 @@ const ViewSnippet: React.FC = () => {
               }`}
               className="font-bold hover:underline"
             >
-              {isLegacySnippet
-                ? (content as Snippet).authorName
-                : tecAuthor?.username || tecAuthor?.name || tecAuthor?.email || tecAuthor?._id || "Unknown User"}
+              {displayName}
             </Link>
             <span>
               {formatDistanceToNow(
@@ -237,7 +238,7 @@ const ViewSnippet: React.FC = () => {
                 >
                   Edit
                 </OutlineButton>
-                <OutlineButton size="small" variant="danger" onClick={handleDeleteTEC}>
+                <OutlineButton size="small" variant="danger" onClick={confirmDelete}>
                   Delete
                 </OutlineButton>
               </>
@@ -314,10 +315,7 @@ const ViewSnippet: React.FC = () => {
         {/* Related Snippets */}
         <StickyNote variant="blue" size="small">
           <h3 className="font-bold text-text-primary mb-3">
-            More from{" "}
-            {isLegacySnippet
-              ? (content as Snippet).authorName
-              : tecAuthor?.username || tecAuthor?.name || tecAuthor?.email || tecAuthor?._id || "Unknown User"}
+            More from {displayName}
           </h3>
           <div className="space-y-2">
             {!isLegacySnippet && userTecs.length > 0 ? (
@@ -396,6 +394,21 @@ const ViewSnippet: React.FC = () => {
           onImprove={(id) => console.log('Improving TEC:', id)}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete TEC"
+        message={`Are you sure you want to delete "${tec?.title || 'this TEC'}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          handleDeleteTEC();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };

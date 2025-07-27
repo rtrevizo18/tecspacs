@@ -6,12 +6,14 @@ import OutlineButton from "../components/OutlineButton";
 import LanguageTag from "../components/LanguageTag";
 import DashedLine from "../components/DashedLine";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
 // import { PAC } from "../types"; // Unused - PAC structure defined by API
 
 const NewPAC: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -86,12 +88,12 @@ const NewPAC: React.FC = () => {
 
   const createPAC = async () => {
     if (!currentUser || !accessToken) {
-      alert("Please log in to create a PAC");
+      showError("Please log in to create a PAC");
       return;
     }
 
     if (!name.trim() || !description.trim()) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -110,13 +112,13 @@ const NewPAC: React.FC = () => {
       const createdPAC = await apiService.createPac(accessToken, newPACData);
       
       console.log("PAC created successfully:", createdPAC);
-      alert("PAC created successfully!");
+      showSuccess("PAC created successfully!");
       
       // Navigate to the newly created PAC
       navigate(`/view-pac/${createdPAC._id}`);
     } catch (error) {
       console.error("Error creating PAC:", error);
-      alert("Failed to create PAC. Please try again.");
+      showError("Failed to create PAC. Please try again.");
     } finally {
       setIsCreating(false);
     }

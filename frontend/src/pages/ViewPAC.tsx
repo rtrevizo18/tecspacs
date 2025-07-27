@@ -9,12 +9,16 @@ import AIPanel from "../components/AIPanel";
 import { getPACById, getUserById } from "../data/mockData";
 import DashedLine from "../components/DashedLine";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
 import { PAC, User } from "../types";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { getCreatedByDisplayName, getCreatedByDisplayInitial } from "../utils/userUtils";
 
 const ViewPAC: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
   
   // State for real PAC data
@@ -23,6 +27,7 @@ const ViewPAC: React.FC = () => {
   const [userPacs, setUserPacs] = useState<PAC[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Fallback to mock data for backward compatibility
   const mockPac = id ? getPACById(id) : null;
@@ -83,29 +88,36 @@ const ViewPAC: React.FC = () => {
   const handleDeletePAC = async () => {
     if (!pac || !currentUser) return;
     
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${pac.name}"? This action cannot be undone.`
-    );
-    
-    if (!confirmDelete) return;
-    
     try {
       if (!accessToken) {
-        alert('Please log in to delete this PAC');
+        showError('Please log in to delete this PAC');
         return;
       }
       
       await apiService.deletePac(accessToken, pac._id);
-      alert('PAC deleted successfully');
+      showSuccess('PAC deleted successfully!');
       navigate('/'); // Navigate back to dashboard
     } catch (error) {
       console.error('Error deleting PAC:', error);
-      alert('Failed to delete PAC. Please try again.');
+      showError('Failed to delete PAC. Please try again.');
     }
+  };
+
+  const confirmDelete = () => {
+    setShowDeleteConfirm(true);
   };
 
   // Use real PAC data or fall back to mock
   const currentPac = pac || mockPac;
+  
+  // Get display names using utility functions
+  const displayName = pac 
+    ? getCreatedByDisplayName(pac.createdBy)
+    : author?.username || author?.name || author?.email || 'Unknown User';
+    
+  const displayInitial = pac
+    ? getCreatedByDisplayInitial(pac.createdBy)
+    : (author?.username || author?.name || author?.email || 'U').charAt(0).toUpperCase();
 
   // Show loading state
   if (isLoading) {
@@ -150,14 +162,14 @@ const ViewPAC: React.FC = () => {
           <div className="flex items-center gap-2">
             <Link to={`/user/${pac ? pac.createdBy._id : (currentPac as any)?.author}`}>
               <div className="w-6 h-6 bg-sticky-default border border-pen-black rounded-full flex items-center justify-center font-bold hover:opacity-80 transition-opacity">
-                {(author?.username || author?.name || author?.email || author?._id || 'U').charAt(0).toUpperCase()}
+                {displayInitial}
               </div>
             </Link>
             <Link
               to={`/user/${pac ? pac.createdBy._id : (currentPac as any)?.author}`}
               className="font-bold hover:underline"
             >
-              {author?.username || author?.name || author?.email || author?._id || 'Unknown User'}
+              {displayName}
             </Link>
             <span>{formatDistanceToNow(new Date(currentPac.createdAt))} ago</span>
           </div>
@@ -169,7 +181,7 @@ const ViewPAC: React.FC = () => {
                 <OutlineButton size="small" onClick={() => navigate(`/edit-pac/${currentPac._id}`)}>
                   Edit
                 </OutlineButton>
-                <OutlineButton size="small" variant="danger" onClick={handleDeletePAC}>
+                <OutlineButton size="small" variant="danger" onClick={confirmDelete}>
                   Delete
                 </OutlineButton>
               </>
@@ -249,7 +261,7 @@ const ViewPAC: React.FC = () => {
         {/* Related PACs */}
         <StickyNote variant="green" size="small">
           <h3 className="font-bold text-text-primary mb-3">
-            More PACs from {author?.username || author?.name || author?.email || author?._id || 'Unknown User'}
+            More PACs from {displayName}
           </h3>
           <div className="space-y-2">
             {userPacs.length > 0 ? (
@@ -285,6 +297,21 @@ const ViewPAC: React.FC = () => {
         itemId={currentPac._id}
         onSummarize={(id) => console.log('Summarizing PAC:', id)}
         onImprove={(id) => console.log('Improving PAC:', id)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete PAC"
+        message={`Are you sure you want to delete "${pac?.name || 'this PAC'}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          handleDeletePAC();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
     </div>
   );
