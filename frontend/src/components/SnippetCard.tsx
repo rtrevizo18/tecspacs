@@ -53,9 +53,9 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
           <span>{formatDistanceToNow(snippet.createdAt)} ago</span>
         </div>
 
-        <button className="text-text-accent hover:opacity-80 transition-opacity">
+        {/* <button className="text-text-accent hover:opacity-80 transition-opacity">
           <img src="/bookmark.png" alt="Bookmark" className="w-5 h-5" />
-        </button>
+        </button> */}
       </div>
       <div className="mb-3 flex flex-wrap gap-2">
         {snippet.tags.map((tag) => (
@@ -68,6 +68,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
           variant={getRandomVariant()}
           className="h-64 transition-transform hover:scale-105 cursor-pointer flex flex-col"
         >
+
           <h3 className="font-bold text-text-primary text-lg">
             {truncateTitle(snippet.title)}
           </h3>

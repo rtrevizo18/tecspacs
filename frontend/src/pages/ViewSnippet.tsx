@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import StickyNote from "../components/StickyNote";
 import CodeBox from "../components/CodeBox";
 import LanguageTag from "../components/LanguageTag";
+import TypeBookmark from "../components/TypeBookmark";
 import OutlineButton from "../components/OutlineButton";
 import { getSnippetById, getCurrentUser, getTECById, getUserById } from "../data/mockData";
 import { TEC, Snippet } from "../types";
@@ -110,7 +111,10 @@ const ViewSnippet: React.FC = () => {
         </div>
 
         {/* Main Content - Inside sticky note */}
-        <StickyNote variant="default" className="mb-6">
+        <StickyNote variant="default" className="mb-6 relative">
+          {/* Type Bookmark - only show for TEC items */}
+          {isTEC && <TypeBookmark type="TEC" />}
+          
           <h1 className="text-2xl font-bold text-text-primary mb-4">
             {isLegacySnippet ? (content as Snippet).title : (content as TEC).title}
           </h1>

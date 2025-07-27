@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import StickyNote from "./StickyNote";
 import LanguageTag from "./LanguageTag";
+import TypeBookmark from "./TypeBookmark";
 import { TEC, PAC } from "../types";
 import DashedLine from "./DashedLine";
 
@@ -61,12 +62,6 @@ const ItemCard: React.FC<ItemCardProps> = ({
           <span>{formatDistanceToNow(new Date(item.createdAt))} ago</span>
         </div>
 
-        {/* Type label - right aligned */}
-        <span className={`px-3 py-1 text-xs font-bold border-2 border-pen-black rounded-full shadow-sm transform transition-transform hover:scale-105 ${
-          isTEC ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'
-        }`}>
-          {type}
-        </span>
 
         {/* Temporarily disabled save functionality */}
         {/* <button className="text-text-accent hover:opacity-80 transition-opacity opacity-50 cursor-not-allowed">
@@ -86,8 +81,11 @@ const ItemCard: React.FC<ItemCardProps> = ({
       <Link to={isTEC ? `/view/${item._id}` : `/view-pac/${item._id}`}>
         <StickyNote
           variant={getRandomVariant()}
-          className="h-64 transition-transform hover:scale-105 cursor-pointer flex flex-col"
+          className="h-64 transition-transform hover:scale-105 cursor-pointer flex flex-col relative"
         >
+          {/* Type Bookmark */}
+          <TypeBookmark type={type} />
+          
           <h3 className="font-bold text-text-primary text-lg">
             {truncateTitle(isTEC ? tecItem.title : pacItem.name)}
           </h3>

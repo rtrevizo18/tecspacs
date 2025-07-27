@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import StickyNote from "../components/StickyNote";
 import LanguageTag from "../components/LanguageTag";
+import TypeBookmark from "../components/TypeBookmark";
 import OutlineButton from "../components/OutlineButton";
 import { getPACById, getCurrentUser, getUserById } from "../data/mockData";
 import DashedLine from "../components/DashedLine";
@@ -51,10 +52,6 @@ const ViewPAC: React.FC = () => {
               {author?.name || 'Unknown'}
             </Link>
             <span>{formatDistanceToNow(new Date(pac.createdAt))} ago</span>
-            {/* PAC Type label */}
-            <span className="px-3 py-1 text-xs font-bold border-2 border-pen-black rounded-full shadow-sm bg-green-500 text-white">
-              PAC
-            </span>
           </div>
 
           {/* Action Buttons */}
@@ -80,7 +77,10 @@ const ViewPAC: React.FC = () => {
         </div>
 
         {/* Main Content - Inside sticky note */}
-        <StickyNote variant="blue" className="mb-6">
+        <StickyNote variant="blue" className="mb-6 relative">
+          {/* Type Bookmark */}
+          <TypeBookmark type="PAC" />
+          
           <h1 className="text-2xl font-bold text-text-primary mb-4">
             {pac.name}
           </h1>
