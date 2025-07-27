@@ -4,7 +4,11 @@ import {
   getUserConfig,
   clearUserConfig,
 } from '../util/config.js';
-import { getTokenViaDeviceFlow } from '../util/auth0-device-flow.js';
+import {
+  getTokenViaDeviceFlow,
+  isTokenExpired,
+  refreshToken,
+} from '../util/auth0-device-flow.js';
 import { resolve } from 'path';
 
 const API_URL = process.env.API_BASE_URL;
@@ -19,17 +23,50 @@ const apiClient = axios.create({
 
 export async function loginAction() {
   try {
-    console.log('🚀 Starting authentication...');
+    // Check if we already have a token
+    const userConfig = await getUserConfig();
+    let tokenData = null;
 
-    // Get Auth0 token via device flow
-    const token = await getTokenViaDeviceFlow();
+    if (userConfig && userConfig.token) {
+      console.log('Checking existing authentication...');
+
+      // Check if access_token is expired
+      if (isTokenExpired(userConfig.token.access_token)) {
+        console.log('Token expired, attempting to refresh...');
+
+        // If we have a refresh_token, try to use it
+        if (userConfig.token.refresh_token) {
+          try {
+            tokenData = await refreshToken(userConfig.token.refresh_token);
+            console.log('Authentication refreshed successfully!');
+          } catch (refreshError) {
+            console.log('Could not refresh token, re-authentication required.');
+            tokenData = null;
+          }
+        } else {
+          console.log(
+            'No refresh token available, re-authentication required.'
+          );
+        }
+      } else {
+        // Token is still valid
+        console.log('Existing authentication is valid.');
+        tokenData = userConfig.token;
+      }
+    }
+
+    // If we don't have a valid token yet, initiate device flow
+    if (!tokenData) {
+      console.log('🚀 Starting authentication...');
+      tokenData = await getTokenViaDeviceFlow();
+    }
 
     console.log('\nAuthentication successful! Fetching your profile...');
 
     // Call the GET /api/users/me endpoint with the token
     const response = await apiClient.get('/api/users/me', {
       headers: {
-        Authorization: `Bearer ${token.access_token}`,
+        Authorization: `Bearer ${tokenData.access_token}`,
       },
     });
 
@@ -37,7 +74,7 @@ export async function loginAction() {
 
     // Save user info including the token for future use
     await saveUserConfig({
-      token: token,
+      token: tokenData, // Save the complete token object including refresh_token
       auth0Id: userData.auth0Id,
       email: userData.email,
       username: userData.username,
@@ -80,6 +117,14 @@ export async function profileAction() {
       return;
     }
 
+    // Check token expiration
+    let tokenStatus = 'Unknown';
+    if (userConfig.token && userConfig.token.access_token) {
+      tokenStatus = isTokenExpired(userConfig.token.access_token)
+        ? 'Expired'
+        : 'Valid';
+    }
+
     console.log('Profile Information:');
     console.log(`Username: ${userConfig.username}`);
     console.log(`Email: ${userConfig.email}`);
@@ -87,6 +132,7 @@ export async function profileAction() {
     console.log(`Tecs: ${userConfig.tecs?.length || 0}`);
     console.log(`Pacs: ${userConfig.pacs?.length || 0}`);
     console.log(`Last Login: ${userConfig.lastLogin}`);
+    console.log(`Token Status: ${tokenStatus}`);
   } catch (error) {
     console.error('Profile error:', error.message);
   }

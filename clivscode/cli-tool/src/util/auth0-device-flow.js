@@ -1,6 +1,6 @@
 import axios from 'axios';
 import open from 'open';
-import { jwt_decode } from 'jwt_decode';
+import { jwtDecode } from 'jwt-decode';
 import { configDotenv } from 'dotenv';
 
 configDotenv();
@@ -86,7 +86,7 @@ export function isTokenExpired(token) {
   try {
     if (!token) return true;
 
-    const decoded = jwt_decode(token);
+    const decoded = jwtDecode(token);
     const currentTime = Date.now() / 1000;
 
     // Add a buffer of 60 seconds to account for time differences
