@@ -1182,3 +1182,188 @@ export async function searchPacsAction(searchTerm, options = {}) {
     return [];
   }
 }
+
+export async function getUserPacsOnlineAction(options = {}) {
+  try {
+    // Get user auth token
+    const userConfig = await getUserConfig();
+    if (!userConfig || !userConfig.token || !userConfig.token.access_token) {
+      console.log(
+        'You must be logged in to view your PACs. Use "tecspacs login" first.'
+      );
+      return;
+    }
+
+    // Check if token is expired and try to refresh if needed
+    let accessToken = userConfig.token.access_token;
+    if (isTokenExpired(accessToken) && userConfig.token.refresh_token) {
+      try {
+        const newToken = await refreshToken(userConfig.token.refresh_token);
+        accessToken = newToken.access_token;
+        await updateUserConfig({ token: newToken });
+      } catch (refreshError) {
+        console.log('Your session has expired. Please login again.');
+        return;
+      }
+    }
+
+    console.log('\nFetching your PACs from the server...');
+
+    // Get user profile to get ID
+    const profileResponse = await apiClient.get('/api/users/profile', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const userId = profileResponse.data._id;
+
+    // Now get the user's PACs
+    const response = await apiClient.get(`/api/users/${userId}/pacs`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const { user, pacs } = response.data;
+
+    // Display user info
+    console.log(`\n👤 User: ${user.username || 'Unknown'}`);
+    if (user.email) console.log(`📧 Email: ${user.email}`);
+    if (user.bio) console.log(`📝 Bio: ${user.bio}`);
+
+    if (!pacs || pacs.length === 0) {
+      console.log('\nYou have no public PACs.');
+      return { user, pacs: [] };
+    }
+
+    console.log(`\nFound ${pacs.length} PACs (sorted by newest first):`);
+
+    // Display pacs in a formatted way
+    pacs.forEach((pac, index) => {
+      console.log(`\n${index + 1}. Name: ${pac.name}`);
+
+      if (pac.description) {
+        console.log(`   Description: ${pac.description}`);
+      }
+
+      if (pac.language) {
+        console.log(`   Language: ${pac.language}`);
+      }
+
+      if (pac.tag) {
+        console.log(`   Tag: ${pac.tag}`);
+      }
+
+      if (pac.dependencies && pac.dependencies.length > 0) {
+        console.log(`   Dependencies: ${pac.dependencies.join(', ')}`);
+      }
+
+      if (pac.files && pac.files.length > 0) {
+        console.log(`   Files: ${pac.files.length}`);
+      }
+
+      if (pac.createdAt) {
+        console.log(`   Created: ${new Date(pac.createdAt).toLocaleString()}`);
+      }
+    });
+
+    return { user, pacs };
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.log('Your session has expired. Please login again.');
+    } else if (error.response?.data?.message) {
+      console.error(`❌ Server error: ${error.response.data.message}`);
+    } else {
+      ErrorHandler.handle(error, 'Get Your PACs');
+    }
+    return null;
+  }
+}
+
+export async function getUserTecsOnlineAction(options = {}) {
+  try {
+    // Get user auth token
+    const userConfig = await getUserConfig();
+    if (!userConfig || !userConfig.token || !userConfig.token.access_token) {
+      console.log(
+        'You must be logged in to view your TECs. Use "tecspacs login" first.'
+      );
+      return;
+    }
+
+    // Check if token is expired and try to refresh if needed
+    let accessToken = userConfig.token.access_token;
+    if (isTokenExpired(accessToken) && userConfig.token.refresh_token) {
+      try {
+        const newToken = await refreshToken(userConfig.token.refresh_token);
+        accessToken = newToken.access_token;
+        await updateUserConfig({ token: newToken });
+      } catch (refreshError) {
+        console.log('Your session has expired. Please login again.');
+        return;
+      }
+    }
+
+    console.log('\nFetching your TECs from the server...');
+
+    // Get user profile to get ID
+    const profileResponse = await apiClient.get('/api/users/profile', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const userId = profileResponse.data._id;
+
+    // Now get the user's TECs
+    const response = await apiClient.get(`/api/users/${userId}/tecs`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const { user, tecs } = response.data;
+
+    // Display user info
+    console.log(`\n👤 User: ${user.username || 'Unknown'}`);
+    if (user.email) console.log(`📧 Email: ${user.email}`);
+    if (user.bio) console.log(`📝 Bio: ${user.bio}`);
+
+    if (!tecs || tecs.length === 0) {
+      console.log('\nYou have no public TECs.');
+      return { user, tecs: [] };
+    }
+
+    console.log(`\nFound ${tecs.length} TECs (sorted by newest first):`);
+
+    // Display tecs in a formatted way
+    tecs.forEach((tec, index) => {
+      console.log(`\n${index + 1}. Name: ${tec.title}`);
+      console.log(`   Language: ${tec.language}`);
+
+      if (tec.description) {
+        console.log(`   Description: ${tec.description}`);
+      }
+
+      if (tec.tags && tec.tags.length > 0) {
+        console.log(`   Tags: ${tec.tags.join(', ')}`);
+      }
+
+      if (tec.createdAt) {
+        console.log(`   Created: ${new Date(tec.createdAt).toLocaleString()}`);
+      }
+    });
+
+    return { user, tecs };
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.log('Your session has expired. Please login again.');
+    } else if (error.response?.data?.message) {
+      console.error(`❌ Server error: ${error.response.data.message}`);
+    } else {
+      ErrorHandler.handle(error, 'Get Your TECs');
+    }
+    return null;
+  }
+}

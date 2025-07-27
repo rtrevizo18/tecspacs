@@ -12,11 +12,13 @@ import {
   summarizeTecAction,
   getPacByIdAction,
   getAllPacsAction,
-  publishPacAction, // Changed from createPacAction
+  publishPacAction,
   deletePacAction,
   summarizePacAction,
   searchTecsAction,
   searchPacsAction,
+  getUserPacsOnlineAction, // Add this import
+  getUserTecsOnlineAction, // Add this import
 } from '../controllers/online-controllers.js';
 
 export async function loadOnlineCommands(program) {
@@ -118,4 +120,15 @@ export async function loadOnlineCommands(program) {
     .command('summarize-pac-online <id>')
     .description('Get an AI-generated summary of your package')
     .action(summarizePacAction);
+
+  // Add these new commands
+  program
+    .command('get-my-pacs-online')
+    .description('Get all your public PACs')
+    .action(getUserPacsOnlineAction);
+
+  program
+    .command('get-my-tecs-online')
+    .description('Get all your public TECs')
+    .action(getUserTecsOnlineAction);
 }
