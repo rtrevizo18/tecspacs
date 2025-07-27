@@ -7,7 +7,8 @@ export const SCHEMAS = [
       language TEXT NOT NULL,
       category TEXT,
       file_path TEXT NOT NULL,
-      usage_count INTEGER DEFAULT 0
+      usage_count INTEGER DEFAULT 0,
+      online_id TEXT
     )
   `,
   `
@@ -21,13 +22,16 @@ export const SCHEMAS = [
       category TEXT,
       usage_count INTEGER DEFAULT 0,
       package_path TEXT NOT NULL, -- Path to package directory
-      manifest_path TEXT NOT NULL -- Path to package.json/manifest
+      manifest_path TEXT NOT NULL, -- Path to package.json/manifest
+      online_id TEXT
     )
   `,
   `CREATE INDEX IF NOT EXISTS idx_snippets_name ON snippets(name);`,
   `CREATE INDEX IF NOT EXISTS idx_snippets_language ON snippets(language)`,
   `CREATE INDEX IF NOT EXISTS idx_snippets_category ON snippets(category)`,
+  `CREATE INDEX IF NOT EXISTS idx_snippets_online_id ON snippets(online_id)`,
   `CREATE INDEX IF NOT EXISTS idx_packages_name ON packages(name);`,
   `CREATE INDEX IF NOT EXISTS idx_packages_language ON packages(language)`,
   `CREATE INDEX IF NOT EXISTS idx_packages_category ON packages(category)`,
+  `CREATE INDEX IF NOT EXISTS idx_packages_online_id ON packages(online_id)`,
 ];

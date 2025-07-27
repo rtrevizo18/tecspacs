@@ -488,4 +488,44 @@ export class StorageManager {
       );
     }
   }
+
+  /**
+   * Update the online_id field for a tec in the local database
+   * @param {string} name - The name of the tec
+   * @param {string} onlineId - The online ID to store
+   * @returns {Promise<void>}
+   */
+  static async updateTecOnlineId(name, onlineId) {
+    const db = await this.getDb();
+
+    try {
+      await db.run('UPDATE snippets SET online_id = ? WHERE name = ?', [
+        onlineId,
+        name,
+      ]);
+    } catch (error) {
+      console.error(`Failed to update online ID for snippet ${name}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update the online_id field for a pac in the local database
+   * @param {string} name - The name of the pac
+   * @param {string} onlineId - The online ID to store
+   * @returns {Promise<void>}
+   */
+  static async updatePacOnlineId(name, onlineId) {
+    const db = await this.getDb();
+
+    try {
+      await db.run('UPDATE packages SET online_id = ? WHERE name = ?', [
+        onlineId,
+        name,
+      ]);
+    } catch (error) {
+      console.error(`Failed to update online ID for package ${name}:`, error);
+      throw error;
+    }
+  }
 }

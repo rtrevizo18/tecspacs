@@ -4,7 +4,7 @@ import { ErrorHandler } from './util/error-handler.js';
 import { db } from './db/db-manager.js';
 
 import dotenv from 'dotenv';
-import { loadOnlineCommands } from './commands/auth-commands.js';
+import { loadOnlineCommands } from './commands/online-commands.js';
 
 dotenv.config();
 

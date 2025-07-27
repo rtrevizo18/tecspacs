@@ -143,6 +143,14 @@ export async function publishTecAction(name, options = {}) {
       console.log(`Tags: ${tecData.tags.join(', ')}`);
     }
 
+    // Update local snippet with the online ID
+    if (response.data && response.data._id) {
+      await StorageManager.updateTecOnlineId(name.trim(), response.data._id);
+      console.log(
+        `\nLocal database updated with online ID: ${response.data._id}`
+      );
+    }
+
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {
@@ -623,6 +631,14 @@ export async function publishPacAction(name, options = {}) {
 
     if (processedFiles.length > 0) {
       console.log(`Files: ${processedFiles.length} files included`);
+    }
+
+    // Update local package with the online ID
+    if (response.data && response.data._id) {
+      await StorageManager.updatePacOnlineId(name.trim(), response.data._id);
+      console.log(
+        `\nLocal database updated with online ID: ${response.data._id}`
+      );
     }
 
     return response.data;
