@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-text-primary mb-2">
-                  TecSpacs Feed
+                  Feed
                 </h1>
                 <p className="text-text-accent">
                   Discover and share TECs and PACs with the community

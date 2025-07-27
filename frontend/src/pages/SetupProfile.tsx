@@ -30,15 +30,20 @@ const SetupProfile: React.FC = () => {
         username: username.trim(),
         email: user?.email || "",
       });
-      
+
       // Redirect to dashboard after successful profile creation
       navigate("/");
     } catch (err: any) {
       console.error("Error creating profile:", err);
-      
+
       // Check if it's a network/backend error
-      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-        setError("Backend server is not available. You can skip profile creation for now.");
+      if (
+        err?.message?.includes("Failed to fetch") ||
+        err?.name === "TypeError"
+      ) {
+        setError(
+          "Backend server is not available. You can skip profile creation for now."
+        );
       } else {
         setError(err?.message || "Failed to create profile. Please try again.");
       }
@@ -121,13 +126,6 @@ const SetupProfile: React.FC = () => {
               </OutlineButton>
             </div>
           </form>
-
-          <div className="mt-6 pt-4 border-t border-pen-black text-sm text-text-accent">
-            <p>
-              By creating a profile, you agree to share your username and contributions 
-              publicly on the TecSpacs platform.
-            </p>
-          </div>
         </StickyNote>
       </div>
     </div>

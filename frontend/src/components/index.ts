@@ -3,6 +3,7 @@ export { default as CodeBox } from './CodeBox';
 export { default as UnderlineInput } from './UnderlineInput';
 export { default as LanguageTag } from './LanguageTag';
 export { default as TypeBookmark } from './TypeBookmark';
+export { default as AIPanel } from './AIPanel';
 export { default as OutlineButton } from './OutlineButton';
 export { default as Navigation } from './Navigation';
 export { default as SnippetCard } from './SnippetCard';

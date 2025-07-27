@@ -5,6 +5,7 @@ import StickyNote from "../components/StickyNote";
 import LanguageTag from "../components/LanguageTag";
 import TypeBookmark from "../components/TypeBookmark";
 import OutlineButton from "../components/OutlineButton";
+import AIPanel from "../components/AIPanel";
 import { getPACById, getCurrentUser, getUserById } from "../data/mockData";
 import DashedLine from "../components/DashedLine";
 
@@ -143,22 +144,42 @@ const ViewPAC: React.FC = () => {
           <h3 className="font-bold text-text-primary mb-3">
             More PACs from {author?.name || 'Unknown'}
           </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-text-primary">
-                CSS Utilities Package
-              </span>
-              <span className="text-text-accent">1 week ago</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-text-primary">
-                Python Data Tools
-              </span>
-              <span className="text-text-accent">2 weeks ago</span>
-            </div>
+          <div className="space-y-2">
+            <Link
+              to="/view-pac/mock-pac-1"
+              className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
+            >
+              <div className="flex items-center gap-2 flex-1">
+                <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
+                <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
+                  CSS Utilities Package
+                </span>
+              </div>
+              <span className="text-text-accent text-xs ml-2">1 week ago</span>
+            </Link>
+            <Link
+              to="/view-pac/mock-pac-2"
+              className="group flex items-center justify-between text-sm text-text-primary hover:text-text-accent transition-colors"
+            >
+              <div className="flex items-center gap-2 flex-1">
+                <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
+                <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
+                  Python Data Tools
+                </span>
+              </div>
+              <span className="text-text-accent text-xs ml-2">2 weeks ago</span>
+            </Link>
           </div>
         </StickyNote>
       </div>
+
+      {/* Floating AI Assistant */}
+      <AIPanel 
+        type="PAC" 
+        itemId={pac._id}
+        onSummarize={(id) => console.log('Summarizing PAC:', id)}
+        onImprove={(id) => console.log('Improving PAC:', id)}
+      />
     </div>
   );
 };

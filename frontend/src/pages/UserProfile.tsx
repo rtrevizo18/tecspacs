@@ -2,14 +2,23 @@ import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import StickyNote from "../components/StickyNote";
 import OutlineButton from "../components/OutlineButton";
-import { getUserById, mockSnippets, getCurrentUser, mockTECs, mockPACs, getTECById, getPACById } from "../data/mockData";
+import {
+  getUserById,
+  mockSnippets,
+  getCurrentUser,
+  mockTECs,
+  mockPACs,
+  getTECById,
+  getPACById,
+} from "../data/mockData";
 import DashedLine from "../components/DashedLine";
 
 const UserProfile: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const user = getUserById(uid || "");
   const currentUser = getCurrentUser();
-  const isOwnProfile = currentUser?.id === user?.id || currentUser?.auth0Id === user?.auth0Id;
+  const isOwnProfile =
+    currentUser?.id === user?.id || currentUser?.auth0Id === user?.auth0Id;
 
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [editedBio, setEditedBio] = useState(user?.bio || "");
@@ -62,15 +71,15 @@ const UserProfile: React.FC = () => {
 
   // Current items based on active tab
   const currentItems = activeTab === "tecs" ? userTECs : userPACs;
-  
+
   // Featured items (pinned for own profile, first 3 for others)
   const featuredItems = isOwnProfile
     ? activeTab === "tecs"
       ? userTECs.filter((tec) => pinnedTECs.includes(tec._id))
       : userPACs.filter((pac) => pinnedPACs.includes(pac._id))
     : activeTab === "tecs"
-      ? userTECs.slice(0, Math.min(3, userTECs.length))
-      : userPACs.slice(0, Math.min(3, userPACs.length));
+    ? userTECs.slice(0, Math.min(3, userTECs.length))
+    : userPACs.slice(0, Math.min(3, userPACs.length));
 
   // Regular items (non-pinned for own profile, remaining items for others)
   const regularItems = isOwnProfile
@@ -78,8 +87,8 @@ const UserProfile: React.FC = () => {
       ? userTECs.filter((tec) => !pinnedTECs.includes(tec._id))
       : userPACs.filter((pac) => !pinnedPACs.includes(pac._id))
     : activeTab === "tecs"
-      ? userTECs.slice(Math.min(3, userTECs.length))
-      : userPACs.slice(Math.min(3, userPACs.length));
+    ? userTECs.slice(Math.min(3, userTECs.length))
+    : userPACs.slice(Math.min(3, userPACs.length));
 
   // Legacy snippet data for compatibility
   const userSnippets = mockSnippets.filter(
@@ -191,20 +200,26 @@ const UserProfile: React.FC = () => {
               <div className="space-y-1">
                 {featuredItems.map((item) => (
                   <div key={item._id} className="flex items-center gap-2">
-                    {isOwnProfile && (
+                    {/* {isOwnProfile && (
                       <button
                         onClick={() => activeTab === "tecs" ? handleUnpinTEC(item._id) : handleUnpinPAC(item._id)}
                         className="w-2 h-2 bg-red-500 hover:bg-red-600 transition-colors flex-shrink-0"
                         title={`Unpin ${activeTab === "tecs" ? "TEC" : "PAC"}`}
                       />
-                    )}
+                    )} */}
                     <Link
-                      to={activeTab === "tecs" ? `/view/${item._id}` : `/view-pac/${item._id}`}
+                      to={
+                        activeTab === "tecs"
+                          ? `/view/${item._id}`
+                          : `/view-pac/${item._id}`
+                      }
                       className="group flex items-center gap-2 text-sm text-text-primary hover:text-text-accent transition-colors flex-1"
                     >
                       <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
                       <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
-                        {activeTab === "tecs" ? (item as any).title : (item as any).name}
+                        {activeTab === "tecs"
+                          ? (item as any).title
+                          : (item as any).name}
                       </span>
                     </Link>
                   </div>
@@ -229,12 +244,18 @@ const UserProfile: React.FC = () => {
                 {regularItems.map((item) => (
                   <Link
                     key={item._id}
-                    to={activeTab === "tecs" ? `/view/${item._id}` : `/view-pac/${item._id}`}
+                    to={
+                      activeTab === "tecs"
+                        ? `/view/${item._id}`
+                        : `/view-pac/${item._id}`
+                    }
                     className="group flex items-center gap-2 text-sm text-text-primary hover:text-text-accent transition-colors"
                   >
                     <span className="w-2 h-2 border border-pen-black inline-block group-hover:bg-pen-black transition-colors" />
                     <span className="border-b border-dashed border-pen-black flex-1 pb-0.5">
-                      {activeTab === "tecs" ? (item as any).title : (item as any).name}
+                      {activeTab === "tecs"
+                        ? (item as any).title
+                        : (item as any).name}
                     </span>
                   </Link>
                 ))}
@@ -250,8 +271,12 @@ const UserProfile: React.FC = () => {
             </h2>
             <p className="text-accent">
               {isOwnProfile
-                ? `You haven't created any ${activeTab === "tecs" ? "TECs" : "PACs"} yet.`
-                : `This user hasn't created any ${activeTab === "tecs" ? "TECs" : "PACs"}.`}
+                ? `You haven't created any ${
+                    activeTab === "tecs" ? "TECs" : "PACs"
+                  } yet.`
+                : `This user hasn't created any ${
+                    activeTab === "tecs" ? "TECs" : "PACs"
+                  }.`}
             </p>
           </StickyNote>
         )}
