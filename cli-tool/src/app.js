@@ -3,10 +3,7 @@ import { loadCommands } from './commands/commands.js';
 import { ErrorHandler } from './util/error-handler.js';
 import { db } from './db/db-manager.js';
 
-import dotenv from 'dotenv';
 import { loadOnlineCommands } from './commands/online-commands.js';
-
-dotenv.config();
 
 const program = new Command();
 

@@ -3,7 +3,7 @@ import open from 'open';
 import { jwtDecode } from 'jwt-decode';
 import { configDotenv } from 'dotenv';
 
-configDotenv();
+configDotenv({ quiet: true });
 
 const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;
 const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID;
