@@ -13,7 +13,7 @@ const program = new Command();
 program
   .name('tecspacs')
   .description('Command line tool for tecspacs')
-  .version('0.0.1');
+  .version('1.0.0');
 
 async function main() {
   try {

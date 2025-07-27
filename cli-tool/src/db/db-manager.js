@@ -32,7 +32,6 @@ export class DatabaseManager {
       await this.createTables();
 
       this.isInitialized = true;
-      console.log('Database connection successful!');
     } catch (error) {
       throw new FileSystemError(
         `Failed to initialize database: ${error.message}`,
