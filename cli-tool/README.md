@@ -1,4 +1,4 @@
-# TECspacs
+# tecspacs
 
 **A powerful CLI tool for managing and sharing code snippets and packages across your development environments.**
 
@@ -6,7 +6,7 @@
 
 ## 🚀 Overview
 
-TECspacs is a developer productivity tool that allows you to:
+tecspacs is a developer productivity tool that allows you to:
 
 - 📚 Store code snippets (**TECs**) locally with syntax highlighting and organization
 - 📦 Create reusable code packages (**PACs**) with dependencies and documentation
@@ -44,7 +44,7 @@ TECspacs is a developer productivity tool that allows you to:
 
 > tecspacs publish-tec my-snippet
 
-# List all your TECs
+# List all your tecs
 
 > tecspacs list-tecs
 
@@ -52,7 +52,7 @@ TECspacs is a developer productivity tool that allows you to:
 
 ## ✨ Features
 
-### 📝 Code Snippets (TECs)
+### 📝 Code Snippets (tecs)
 
 - Create, retrieve, update, and delete code snippets
 - Organize by language and category
@@ -61,7 +61,7 @@ TECspacs is a developer productivity tool that allows you to:
 - Clipboard integration
 - Online sharing capabilities
 
-### 📦 Code Packages (PACs)
+### 📦 Code Packages (pacs)
 
 - Bundle multiple files into reusable packages
 - Version control for packages
@@ -87,7 +87,7 @@ tecspacs login               # Authenticate with the TECspacs server
 tecspacs logout              # Log out from the current session
 ```
 
-### 📝 TECs Commands
+### 📝 tecs Commands
 
 ```bash
 tecspacs create-tec <name> [options]   # Create a new snippet
@@ -98,7 +98,7 @@ tecspacs list-tecs [options]           # List all snippets
 tecspacs get-my-tecs-online            # Get your online snippets
 ```
 
-### 📦 PACs Commands
+### 📦 pacs Commands
 
 ```bash
 tecspacs create-pac <name> [options]   # Create a new package
@@ -121,25 +121,11 @@ tecspacs search <query>                # Search for online snippets and packages
 
 ## ⚙️ Configuration
 
-TECspacs stores configuration in the standard user config directory:
+tecspacs stores configuration in the standard user config directory:
 
 - **macOS**: `~/Library/Preferences/tecspacs/`
 - **Linux**: `~/.config/tecspacs/`
 - **Windows**: `%APPDATA%\tecspacs\`
-
-Sensitive information like API tokens are stored in your system's secure keychain.
-
----
-
-## 🔐 Security
-
-TECspacs uses a layered approach to security:
-
-1. **System keychain** for credential storage (primary)
-2. **AES-256-GCM encrypted files** (fallback)
-3. **Machine-bound encryption keys**
-
-When working on other people's computers, your `.env` secrets are automatically secured and never stored in plain text.
 
 ---
 
