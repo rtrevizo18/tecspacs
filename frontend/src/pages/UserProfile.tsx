@@ -7,6 +7,7 @@ import DashedLine from "../components/DashedLine";
 import { useAuthContext } from "../contexts/AuthContext";
 import { apiService } from "../services/api";
 import { TEC, PAC, User } from "../types";
+import { getDisplayName, getDisplayInitial } from "../utils/userUtils";
 
 const UserProfile: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
@@ -173,11 +174,30 @@ const UserProfile: React.FC = () => {
     ? userTECs.slice(Math.min(3, userTECs.length))
     : userPACs.slice(Math.min(3, userPACs.length));
 
-  // Get user display name
+  // Get user display name using utility function
   const getUserDisplayName = () => {
-    return (
-      profileUser.name || profileUser.username || profileUser.email || "User"
-    );
+    if (!profileUser) return "User";
+    return getDisplayName({
+      username: profileUser.username,
+      name: profileUser.name,
+      email: profileUser.email,
+      _id: profileUser._id,
+      id: profileUser.id,
+      auth0Id: profileUser.auth0Id
+    });
+  };
+
+  // Get user display initial using utility function
+  const getUserDisplayInitial = () => {
+    if (!profileUser) return "U";
+    return getDisplayInitial({
+      username: profileUser.username,
+      name: profileUser.name,
+      email: profileUser.email,
+      _id: profileUser._id,
+      id: profileUser.id,
+      auth0Id: profileUser.auth0Id
+    });
   };
 
   return (
@@ -188,7 +208,7 @@ const UserProfile: React.FC = () => {
           <div className="flex-shrink-0">
             <div className="w-32 h-32 bg-pen-black rounded-full flex items-center justify-center">
               <span className="text-white text-4xl font-bold">
-                {getUserDisplayName().charAt(0).toUpperCase()}
+                {getUserDisplayInitial()}
               </span>
             </div>
           </div>

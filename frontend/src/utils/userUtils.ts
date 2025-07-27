@@ -58,16 +58,20 @@ export function getDisplayName(user: {
     // Check for UUID format
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) return true;
     
-    // Check for very long strings (likely IDs)
-    if (str.length > 25) return true;
+    // Check for MongoDB ObjectId format (24 hex characters)
+    if (/^[0-9a-f]{24}$/i.test(str)) return true;
     
-    // Check for strings that are mostly numbers/letters without spaces (likely IDs)
-    if (str.length > 15 && !/\s/.test(str) && /^[a-zA-Z0-9_-]+$/.test(str)) return true;
+    // Check for very long strings (likely IDs) - but be more conservative
+    if (str.length > 30) return true;
+    
+    // Only treat as ID if it's very long AND has no spaces AND looks like hex/base64
+    if (str.length > 20 && !/\s/.test(str) && (/^[a-f0-9]+$/i.test(str) || /^[A-Za-z0-9+/=]+$/.test(str))) return true;
     
     return false;
   };
   
-  console.log('getDisplayName called with user:', user);
+  console.log('--- getDisplayName DEBUG ---');
+  console.log('Input user object:', user);
   
   // Try username first, but skip if it looks like a user ID
   if (user.username && user.username.trim()) {
@@ -76,7 +80,7 @@ export function getDisplayName(user: {
     console.log(`Username "${trimmedUsername}" is likely user ID: ${isUserId}`);
     
     if (!isUserId) {
-      console.log('Using username:', trimmedUsername);
+      console.log('USING USERNAME:', trimmedUsername);
       return trimmedUsername;
     }
   }
@@ -88,7 +92,7 @@ export function getDisplayName(user: {
     console.log(`Name "${trimmedName}" is likely user ID: ${isUserId}`);
     
     if (!isUserId) {
-      console.log('Using name:', trimmedName);
+      console.log('USING NAME:', trimmedName);
       return trimmedName;
     }
   }
@@ -102,7 +106,7 @@ export function getDisplayName(user: {
       console.log(`Email part "${trimmedEmail}" is likely user ID: ${isUserId}`);
       
       if (!isUserId) {
-        console.log('Using email part:', trimmedEmail);
+        console.log('USING EMAIL PART:', trimmedEmail);
         return trimmedEmail;
       }
     }
@@ -111,7 +115,7 @@ export function getDisplayName(user: {
   // Fall back to fun name based on user ID
   const userId = user._id || user.id || user.auth0Id || 'unknown';
   const fallbackName = getFallbackName(userId);
-  console.log('Using fallback name:', fallbackName);
+  console.log('USING FALLBACK NAME:', fallbackName);
   return fallbackName;
 }
 
@@ -154,8 +158,12 @@ export function getCreatedByDisplayName(createdBy: {
   name?: string;
   email?: string;
 }): string {
-  // Debug logging to see what we're getting from the API
-  console.log('getCreatedByDisplayName called with:', createdBy);
+  console.log('=== DEBUG: getCreatedByDisplayName called with ===');
+  console.log('createdBy object:', createdBy);
+  console.log('createdBy.username:', createdBy.username);
+  console.log('createdBy.name:', createdBy.name);
+  console.log('createdBy.email:', createdBy.email);
+  console.log('createdBy._id:', createdBy._id);
   
   const result = getDisplayName({
     username: createdBy.username,
@@ -164,7 +172,8 @@ export function getCreatedByDisplayName(createdBy: {
     _id: createdBy._id
   });
   
-  console.log('Returning display name:', result);
+  console.log('Final result:', result);
+  console.log('=== END DEBUG ===');
   return result;
 }
 

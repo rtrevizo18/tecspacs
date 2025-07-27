@@ -107,6 +107,34 @@ const ViewPAC: React.FC = () => {
     setShowDeleteConfirm(true);
   };
 
+  const handleFork = async () => {
+    if (!currentUser || !accessToken) {
+      showError('Please log in to fork this PAC');
+      return;
+    }
+
+    if (!pac) {
+      showError('PAC data not available for forking');
+      return;
+    }
+
+    try {
+      // Create a new PAC with the current content but new ownership
+      const forkedPac = await apiService.createPac(accessToken, {
+        name: `${pac.name} (Forked)`,
+        description: pac.description,
+        dependencies: [...pac.dependencies],
+        files: [...pac.files]
+      });
+
+      showSuccess('PAC forked successfully!');
+      navigate(`/view-pac/${forkedPac._id}`);
+    } catch (error) {
+      console.error('Error forking PAC:', error);
+      showError('Failed to fork PAC. Please try again.');
+    }
+  };
+
   // Use real PAC data or fall back to mock
   const currentPac = pac || mockPac;
   
@@ -185,6 +213,11 @@ const ViewPAC: React.FC = () => {
                   Delete
                 </OutlineButton>
               </>
+            )}
+            {!isOwner && (
+              <OutlineButton size="small" variant="secondary" onClick={handleFork}>
+                Fork
+              </OutlineButton>
             )}
           </div>
         </div>
@@ -295,8 +328,8 @@ const ViewPAC: React.FC = () => {
       <AIPanel 
         type="PAC" 
         itemId={currentPac._id}
-        onSummarize={(id) => console.log('Summarizing PAC:', id)}
-        onImprove={(id) => console.log('Improving PAC:', id)}
+        onSummarize={() => {/* PAC summarized */}}
+        onImprove={() => {/* PAC improved */}}
       />
 
       {/* Delete Confirmation Dialog */}

@@ -217,6 +217,34 @@ class ApiService {
       throw new Error(`Failed to delete PAC: ${response.statusText}`);
     }
   }
+
+  // AI endpoints
+  async summarizeTec(accessToken: string, id: string): Promise<{ summary: string }> {
+    const response = await fetch(`${API_BASE_URL}/tecs/${id}/summarize`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(accessToken),
+    });
+    
+    return this.handleResponse<{ summary: string }>(response);
+  }
+
+  async improveTec(accessToken: string, id: string): Promise<{ improvements: string; tecId: string; tecTitle: string }> {
+    const response = await fetch(`${API_BASE_URL}/tecs/${id}/improve`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(accessToken),
+    });
+    
+    return this.handleResponse<{ improvements: string; tecId: string; tecTitle: string }>(response);
+  }
+
+  async summarizePac(accessToken: string, id: string): Promise<{ summary: string }> {
+    const response = await fetch(`${API_BASE_URL}/pacs/${id}/summarize`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(accessToken),
+    });
+    
+    return this.handleResponse<{ summary: string }>(response);
+  }
 }
 
 export const apiService = new ApiService();

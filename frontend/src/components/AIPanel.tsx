@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import StickyNote from "./StickyNote";
 import OutlineButton from "./OutlineButton";
 import CodeBox from "./CodeBox";
+import { useAuthContext } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
+import { apiService } from "../services/api";
 
 interface AIPanelProps {
   type: "TEC" | "PAC";
@@ -16,6 +19,8 @@ const AIPanel: React.FC<AIPanelProps> = ({
   onSummarize,
   onImprove,
 }) => {
+  const { currentUser, accessToken } = useAuthContext();
+  const { showSuccess, showError } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<
@@ -24,43 +29,90 @@ const AIPanel: React.FC<AIPanelProps> = ({
   const [results, setResults] = useState<{
     summary?: string;
     improvement?: string;
+    improvedCode?: string;
+    fullResponse?: string;
   }>({});
 
   const handleSummarize = async () => {
+    if (!currentUser || !accessToken) {
+      showError("Please log in to use AI features");
+      return;
+    }
+
     setIsLoading("summary");
     setCurrentView("summary");
-    // Simulate API call
-    setTimeout(() => {
-      const mockSummary = `This ${type.toLowerCase()} demonstrates a clean implementation of ${
-        type === "TEC" ? "code logic" : "package structure"
-      }. It shows best practices for ${
-        type === "TEC" ? "writing maintainable code" : "organizing dependencies"
-      } and can be useful for developers working on similar projects.`;
-
-      setResults((prev) => ({ ...prev, summary: mockSummary }));
-      setIsLoading(null);
+    
+    try {
+      let response;
+      if (type === "TEC") {
+        response = await apiService.summarizeTec(accessToken, itemId);
+      } else {
+        response = await apiService.summarizePac(accessToken, itemId);
+      }
+      
+      setResults((prev) => ({ ...prev, summary: response.summary }));
+      showSuccess("AI summary generated successfully!");
       onSummarize?.(itemId);
-    }, 2000);
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      showError("Failed to generate AI summary. Please try again.");
+      setCurrentView("main"); // Go back to main view on error
+    } finally {
+      setIsLoading(null);
+    }
   };
 
   const handleImprove = async () => {
+    if (!currentUser || !accessToken) {
+      showError("Please log in to use AI features");
+      return;
+    }
+
+    if (type !== "TEC") {
+      showError("Code improvement is only available for TECs");
+      return;
+    }
+
     setIsLoading("improvement");
     setCurrentView("improvement");
-    // Simulate API call
-    setTimeout(() => {
-      const mockImprovement = `AI Suggestions for improvement:
-
-1. Add error handling for edge cases
-2. Consider using TypeScript for better type safety
-3. Implement proper validation for inputs
-4. Add unit tests for critical functions
-5. Consider performance optimizations like memoization
-6. Add comprehensive documentation`;
-
-      setResults((prev) => ({ ...prev, improvement: mockImprovement }));
-      setIsLoading(null);
+    
+    try {
+      console.log("Calling improveTec API for itemId:", itemId);
+      const response = await apiService.improveTec(accessToken, itemId);
+      
+      console.log("API Response:", response);
+      
+      // Parse the improvements text to extract code and suggestions
+      const improvementsText = response.improvements;
+      
+      // Extract code from markdown code blocks (between ``` markers)
+      const codeMatch = improvementsText.match(/```[\w]*\n([\s\S]*?)\n```/);
+      const extractedCode = codeMatch ? codeMatch[1].trim() : '';
+      
+      // Extract suggestions (everything after **Improvements:**)
+      const suggestionsMatch = improvementsText.match(/\*\*Improvements:\*\*([\s\S]*)/);
+      const extractedSuggestions = suggestionsMatch ? suggestionsMatch[1].trim() : improvementsText;
+      
+      console.log("Extracted code:", extractedCode);
+      console.log("Extracted suggestions:", extractedSuggestions);
+      
+      setResults((prev) => ({ 
+        ...prev, 
+        improvement: extractedSuggestions,
+        improvedCode: extractedCode,
+        fullResponse: improvementsText // Keep the full response as backup
+      }));
+      
+      console.log("Updated results state");
+      showSuccess("AI code improvements generated successfully!");
       onImprove?.(itemId);
-    }, 2000);
+    } catch (error) {
+      console.error("Error generating improvements:", error);
+      showError(`Failed to generate AI improvements: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setCurrentView("main"); // Go back to main view on error
+    } finally {
+      setIsLoading(null);
+    }
   };
 
   const handleBack = () => {
@@ -68,29 +120,33 @@ const AIPanel: React.FC<AIPanelProps> = ({
   };
 
   const handleUpdate = async () => {
+    if (!currentUser || !accessToken || !results.improvedCode) {
+      showError("Unable to update: missing improved code or authentication");
+      return;
+    }
+
     setIsLoading("update");
     try {
-      // Mock POST request to update the TEC code
-      const response = await fetch(`/api/tecs/${itemId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Assuming token is stored in localStorage
-        },
-        body: JSON.stringify({
-          content: results.improvement,
-        }),
+      // First, fetch the current TEC data to get all required fields
+      const currentTec = await apiService.getTecById(itemId, accessToken);
+      
+      // Update the TEC with the improved code, preserving other fields
+      await apiService.updateTec(accessToken, itemId, {
+        title: currentTec.title,
+        description: currentTec.description,
+        language: currentTec.language,
+        content: results.improvedCode,
+        tags: currentTec.tags
       });
 
-      if (response.ok) {
-        console.log("TEC updated successfully");
-        // Optionally show success message or redirect
-        setCurrentView("main");
-      } else {
-        console.error("Failed to update TEC");
-      }
+      showSuccess("TEC updated with AI improvements!");
+      setCurrentView("main");
+      
+      // Optionally refresh the page or trigger a reload of the TEC data
+      window.location.reload();
     } catch (error) {
       console.error("Error updating TEC:", error);
+      showError("Failed to update TEC with improvements. Please try again.");
     } finally {
       setIsLoading(null);
     }
@@ -127,11 +183,12 @@ const AIPanel: React.FC<AIPanelProps> = ({
           style={{
             bottom: "100px",
             right: "50px",
+            maxHeight: "calc(100vh - 200px)", // Limit height to viewport minus margins
           }}
         >
           <StickyNote
             variant="green"
-            className="relative overflow-hidden border-2 border-dashed border-purple-300"
+            className="relative border-2 border-dashed border-purple-300 max-h-full overflow-y-auto"
           >
             {/* Main View */}
             {currentView === "main" && (
@@ -334,7 +391,7 @@ const AIPanel: React.FC<AIPanelProps> = ({
                   </div>
                 ) : (
                   <>
-                    <div className="bg-white/70 border border-pen-black  p-4 notebook-lines mb-3">
+                    <div className="bg-white/70 border border-pen-black p-4 notebook-lines mb-3 max-h-64 overflow-y-auto">
                       <p className="text-sm text-text-primary leading-relaxed">
                         {results.summary}
                       </p>
@@ -429,33 +486,68 @@ const AIPanel: React.FC<AIPanelProps> = ({
                   </div>
                 ) : (
                   <>
-                    <CodeBox code={results.improvement || ""} language="text" />
+                    {/* Show improved code if available */}
+                    {results.improvedCode && (
+                      <div className="mb-4">
+                        <h4 className="font-bold text-sm mb-2">🚀 Improved Code:</h4>
+                        <div className="max-h-48 overflow-y-auto">
+                          <CodeBox code={results.improvedCode} language="typescript" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show AI suggestions if available */}
+                    {results.improvement && (
+                      <div className="mb-4">
+                        <h4 className="font-bold text-sm mb-2">💡 AI Analysis & Suggestions:</h4>
+                        <div className="bg-white/70 border border-pen-black p-3 notebook-lines max-h-40 overflow-y-auto">
+                          <div className="text-xs text-text-primary whitespace-pre-wrap">
+                            {results.improvement}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Fallback: show full response if parsing didn't work well */}
+                    {!results.improvement && !results.improvedCode && results.fullResponse && (
+                      <div className="mb-4">
+                        <h4 className="font-bold text-sm mb-2">🤖 AI Response:</h4>
+                        <div className="bg-white/70 border border-pen-black p-3 notebook-lines max-h-48 overflow-y-auto">
+                          <div className="text-xs text-text-primary whitespace-pre-wrap">
+                            {results.fullResponse}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2 mt-3">
                       <OutlineButton
                         size="small"
                         onClick={() =>
                           navigator.clipboard.writeText(
-                            results.improvement || ""
+                            results.improvedCode || results.fullResponse || results.improvement || ""
                           )
                         }
                       >
                         📋 Copy
                       </OutlineButton>
-                      <OutlineButton
-                        size="small"
-                        onClick={handleUpdate}
-                        disabled={isLoading === "update"}
-                        variant="primary"
-                      >
-                        {isLoading === "update" ? (
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 border border-t-2 border-blue-600 rounded-full animate-spin"></div>
-                            Updating...
-                          </div>
-                        ) : (
-                          "🔄 Update"
-                        )}
-                      </OutlineButton>
+                      {results.improvedCode && (
+                        <OutlineButton
+                          size="small"
+                          onClick={handleUpdate}
+                          disabled={isLoading === "update"}
+                          variant="primary"
+                        >
+                          {isLoading === "update" ? (
+                            <div className="flex items-center gap-1">
+                              <div className="w-3 h-3 border border-t-2 border-blue-600 rounded-full animate-spin"></div>
+                              Updating...
+                            </div>
+                          ) : (
+                            "🔄 Update TEC"
+                          )}
+                        </OutlineButton>
+                      )}
                     </div>
                   </>
                 )}

@@ -102,6 +102,37 @@ const ViewSnippet: React.FC = () => {
     setShowDeleteConfirm(true);
   };
 
+  const handleFork = async () => {
+    if (!currentUser || !accessToken) {
+      showError('Please log in to fork this TEC');
+      return;
+    }
+
+    if (!isTEC) {
+      showError('Forking is only available for TECs');
+      return;
+    }
+
+    try {
+      const tecContent = content as TEC;
+      
+      // Create a new TEC with the current content but new ownership
+      const forkedTec = await apiService.createTec(accessToken, {
+        title: `${tecContent.title} (Forked)`,
+        description: tecContent.description,
+        language: tecContent.language,
+        content: tecContent.content,
+        tags: [...tecContent.tags]
+      });
+
+      showSuccess('TEC forked successfully!');
+      navigate(`/view/${forkedTec._id}`);
+    } catch (error) {
+      console.error('Error forking TEC:', error);
+      showError('Failed to fork TEC. Please try again.');
+    }
+  };
+
   // Determine what type of content we're viewing
   const content = tec || snippet; // Prioritize TEC data over legacy snippet
   const isLegacySnippet = !tec && !!snippet;
@@ -243,9 +274,11 @@ const ViewSnippet: React.FC = () => {
                 </OutlineButton>
               </>
             )}
-            <OutlineButton size="small" variant="secondary" onClick={() => {}}>
-              Fork
-            </OutlineButton>
+            {!isOwner && (
+              <OutlineButton size="small" variant="secondary" onClick={handleFork}>
+                Fork
+              </OutlineButton>
+            )}
           </div>
         </div>
 
@@ -390,8 +423,8 @@ const ViewSnippet: React.FC = () => {
         <AIPanel 
           type="TEC" 
           itemId={(content as TEC)._id}
-          onSummarize={(id) => console.log('Summarizing TEC:', id)}
-          onImprove={(id) => console.log('Improving TEC:', id)}
+          onSummarize={() => {/* TEC summarized */}}
+          onImprove={() => {/* TEC improved */}}
         />
       )}
 
