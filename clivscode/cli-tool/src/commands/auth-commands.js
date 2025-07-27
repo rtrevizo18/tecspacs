@@ -12,7 +12,7 @@ import {
   summarizeTecAction,
   getPacByIdAction,
   getAllPacsAction,
-  createPacAction,
+  publishPacAction, // Changed from createPacAction
   deletePacAction,
   summarizePacAction,
   searchTecsAction,
@@ -101,11 +101,11 @@ export async function loadOnlineCommands(program) {
     .description('View a specific package by ID')
     .action(getPacByIdAction);
 
-  // Create new pac command
+  // Create new pac command - update to be consistent with publish-tec-online
   program
-    .command('create-pac-online <name>')
-    .description('Create a new package on your online account')
-    .action(createPacAction);
+    .command('publish-pac-online <name>') // Changed from create-pac-online
+    .description('Publish a local package to your online account') // Updated description
+    .action(publishPacAction); // Changed from createPacAction
 
   // Delete PAC command
   program

@@ -531,7 +531,7 @@ export async function getAllPacsAction(options = {}) {
   }
 }
 
-export async function createPacAction(name, options = {}) {
+export async function publishPacAction(name, options = {}) {
   try {
     // Validate input
     if (!name || name.trim() === '') {
