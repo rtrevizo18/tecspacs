@@ -3,10 +3,14 @@ import { loadCommands } from './commands/commands.js';
 import { ErrorHandler } from './util/error-handler.js';
 import { db } from './db/db-manager.js';
 
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const program = new Command();
 
 program
-  .name('tecs')
+  .name('tecspacs')
   .description('Command line tool for tecspacs')
   .version('0.0.1');
 

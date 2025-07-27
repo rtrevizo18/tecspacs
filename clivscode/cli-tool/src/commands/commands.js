@@ -5,7 +5,7 @@ import {
   deleteTecPrompter,
   updatePacPrompter,
   updateTecPrompter,
-} from './prompts.js';
+} from './prompts/prompts.js';
 import {
   getTecAction,
   createTecAction,
@@ -36,10 +36,6 @@ export async function loadCommands(program) {
   program
     .command('update-tec <name>')
     .description('Update an existing snippet')
-    .option('-d, --description <description>', 'Update description')
-    .option('-l, --language <language>', 'Update programming language')
-    .option('-c, --category <category>', 'Update category')
-    .option('--content <content>', 'Update content')
     .action(async name => {
       const answers = await updateTecPrompter();
       await updateTecAction(name, answers);
@@ -48,7 +44,6 @@ export async function loadCommands(program) {
   program
     .command('delete-tec <name>')
     .description('Delete a snippet')
-    .option('-f, --force', 'Skip confirmation prompt')
     .action(async name => {
       const willDelete = await deleteTecPrompter();
       if (willDelete) {
@@ -82,7 +77,6 @@ export async function loadCommands(program) {
   program
     .command('delete-pac <name>')
     .description('Delete a package')
-    .option('-f, --force', 'Skip confirmation prompt')
     .action(async name => {
       const willDelete = await deletePacPrompter();
       if (willDelete) {
