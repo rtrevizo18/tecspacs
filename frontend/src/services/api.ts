@@ -1,6 +1,6 @@
 import { User, TEC, PAC } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://tecspacs.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://tecspacs.onrender.com/api';
 
 interface ApiError {
   message: string;
