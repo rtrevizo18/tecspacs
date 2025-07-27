@@ -5,6 +5,9 @@ import CodeBox from "./CodeBox";
 import { useAuthContext } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { apiService } from "../services/api";
+type SummaryResponse = {
+  summary: string;
+};
 
 interface AIPanelProps {
   type: "TEC" | "PAC";
@@ -41,15 +44,16 @@ const AIPanel: React.FC<AIPanelProps> = ({
 
     setIsLoading("summary");
     setCurrentView("summary");
-    
+
     try {
-      let response;
+      let response: SummaryResponse;
+
       if (type === "TEC") {
         response = await apiService.summarizeTec(accessToken, itemId);
       } else {
         response = await apiService.summarizePac(accessToken, itemId);
       }
-      
+
       setResults((prev) => ({ ...prev, summary: response.summary }));
       showSuccess("AI summary generated successfully!");
       onSummarize?.(itemId);
@@ -75,40 +79,48 @@ const AIPanel: React.FC<AIPanelProps> = ({
 
     setIsLoading("improvement");
     setCurrentView("improvement");
-    
+
     try {
       console.log("Calling improveTec API for itemId:", itemId);
       const response = await apiService.improveTec(accessToken, itemId);
-      
+
       console.log("API Response:", response);
-      
+
       // Parse the improvements text to extract code and suggestions
       const improvementsText = response.improvements;
-      
+
       // Extract code from markdown code blocks (between ``` markers)
       const codeMatch = improvementsText.match(/```[\w]*\n([\s\S]*?)\n```/);
-      const extractedCode = codeMatch ? codeMatch[1].trim() : '';
-      
+      const extractedCode = codeMatch ? codeMatch[1].trim() : "";
+
       // Extract suggestions (everything after **Improvements:**)
-      const suggestionsMatch = improvementsText.match(/\*\*Improvements:\*\*([\s\S]*)/);
-      const extractedSuggestions = suggestionsMatch ? suggestionsMatch[1].trim() : improvementsText;
-      
+      const suggestionsMatch = improvementsText.match(
+        /\*\*Improvements:\*\*([\s\S]*)/
+      );
+      const extractedSuggestions = suggestionsMatch
+        ? suggestionsMatch[1].trim()
+        : improvementsText;
+
       console.log("Extracted code:", extractedCode);
       console.log("Extracted suggestions:", extractedSuggestions);
-      
-      setResults((prev) => ({ 
-        ...prev, 
+
+      setResults((prev) => ({
+        ...prev,
         improvement: extractedSuggestions,
         improvedCode: extractedCode,
-        fullResponse: improvementsText // Keep the full response as backup
+        fullResponse: improvementsText, // Keep the full response as backup
       }));
-      
+
       console.log("Updated results state");
       showSuccess("AI code improvements generated successfully!");
       onImprove?.(itemId);
     } catch (error) {
       console.error("Error generating improvements:", error);
-      showError(`Failed to generate AI improvements: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      showError(
+        `Failed to generate AI improvements: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
       setCurrentView("main"); // Go back to main view on error
     } finally {
       setIsLoading(null);
@@ -129,19 +141,19 @@ const AIPanel: React.FC<AIPanelProps> = ({
     try {
       // First, fetch the current TEC data to get all required fields
       const currentTec = await apiService.getTecById(itemId, accessToken);
-      
+
       // Update the TEC with the improved code, preserving other fields
       await apiService.updateTec(accessToken, itemId, {
         title: currentTec.title,
         description: currentTec.description,
         language: currentTec.language,
         content: results.improvedCode,
-        tags: currentTec.tags
+        tags: currentTec.tags,
       });
 
       showSuccess("TEC updated with AI improvements!");
       setCurrentView("main");
-      
+
       // Optionally refresh the page or trigger a reload of the TEC data
       window.location.reload();
     } catch (error) {
@@ -225,8 +237,18 @@ const AIPanel: React.FC<AIPanelProps> = ({
                     className="p-1 hover:bg-black/10 rounded transition-colors"
                     title="Close AI Assistant"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -364,7 +386,9 @@ const AIPanel: React.FC<AIPanelProps> = ({
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-text-primary">AI Summary</h3>
+                      <h3 className="font-bold text-text-primary">
+                        AI Summary
+                      </h3>
                       <p className="text-xs text-text-accent">
                         Powered by Gemini AI
                       </p>
@@ -375,8 +399,18 @@ const AIPanel: React.FC<AIPanelProps> = ({
                     className="p-1 hover:bg-black/10 rounded transition-colors"
                     title="Close AI Assistant"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -470,8 +504,18 @@ const AIPanel: React.FC<AIPanelProps> = ({
                     className="p-1 hover:bg-black/10 rounded transition-colors"
                     title="Close AI Assistant"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -489,17 +533,24 @@ const AIPanel: React.FC<AIPanelProps> = ({
                     {/* Show improved code if available */}
                     {results.improvedCode && (
                       <div className="mb-4">
-                        <h4 className="font-bold text-sm mb-2">🚀 Improved Code:</h4>
+                        <h4 className="font-bold text-sm mb-2">
+                          🚀 Improved Code:
+                        </h4>
                         <div className="max-h-48 overflow-y-auto">
-                          <CodeBox code={results.improvedCode} language="typescript" />
+                          <CodeBox
+                            code={results.improvedCode}
+                            language="typescript"
+                          />
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Show AI suggestions if available */}
                     {results.improvement && (
                       <div className="mb-4">
-                        <h4 className="font-bold text-sm mb-2">💡 AI Analysis & Suggestions:</h4>
+                        <h4 className="font-bold text-sm mb-2">
+                          💡 AI Analysis & Suggestions:
+                        </h4>
                         <div className="bg-white/70 border border-pen-black p-3 notebook-lines max-h-40 overflow-y-auto">
                           <div className="text-xs text-text-primary whitespace-pre-wrap">
                             {results.improvement}
@@ -507,25 +558,32 @@ const AIPanel: React.FC<AIPanelProps> = ({
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Fallback: show full response if parsing didn't work well */}
-                    {!results.improvement && !results.improvedCode && results.fullResponse && (
-                      <div className="mb-4">
-                        <h4 className="font-bold text-sm mb-2">🤖 AI Response:</h4>
-                        <div className="bg-white/70 border border-pen-black p-3 notebook-lines max-h-48 overflow-y-auto">
-                          <div className="text-xs text-text-primary whitespace-pre-wrap">
-                            {results.fullResponse}
+                    {!results.improvement &&
+                      !results.improvedCode &&
+                      results.fullResponse && (
+                        <div className="mb-4">
+                          <h4 className="font-bold text-sm mb-2">
+                            🤖 AI Response:
+                          </h4>
+                          <div className="bg-white/70 border border-pen-black p-3 notebook-lines max-h-48 overflow-y-auto">
+                            <div className="text-xs text-text-primary whitespace-pre-wrap">
+                              {results.fullResponse}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    
+                      )}
+
                     <div className="flex gap-2 mt-3">
                       <OutlineButton
                         size="small"
                         onClick={() =>
                           navigator.clipboard.writeText(
-                            results.improvedCode || results.fullResponse || results.improvement || ""
+                            results.improvedCode ||
+                              results.fullResponse ||
+                              results.improvement ||
+                              ""
                           )
                         }
                       >
