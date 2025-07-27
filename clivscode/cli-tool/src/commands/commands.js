@@ -11,12 +11,14 @@ import {
   createTecAction,
   updateTecAction,
   deleteTecAction,
+  searchTecsAction,
 } from '../controllers/tecs-controllers.js';
 import {
   getPacAction,
   createPacAction,
   updatePacAction,
   deletePacAction,
+  searchPacsAction,
 } from '../controllers/pacs-controllers.js';
 
 export async function loadCommands(program) {
@@ -85,4 +87,19 @@ export async function loadCommands(program) {
         console.log('Operation canceled');
       }
     });
+
+  // Add search commands for local TECs and PACs
+  program
+    .command('search-tecs <searchTerm>')
+    .description('Search for local snippets by name, description, or category')
+    .option('-l, --limit <limit>', 'Maximum number of results to display', '20')
+    .action(searchTecsAction);
+
+  program
+    .command('search-pacs <searchTerm>')
+    .description(
+      'Search for local packages by name, description, category, or author'
+    )
+    .option('-l, --limit <limit>', 'Maximum number of results to display', '20')
+    .action(searchPacsAction);
 }

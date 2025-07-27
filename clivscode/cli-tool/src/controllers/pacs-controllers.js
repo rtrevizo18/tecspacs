@@ -256,4 +256,69 @@ const deletePacAction = async name => {
   }
 };
 
-export { getPacAction, createPacAction, updatePacAction, deletePacAction };
+const searchPacsAction = async (searchTerm, options = {}) => {
+  try {
+    // Validate input
+    if (!searchTerm || searchTerm.trim() === '') {
+      throw new Error('Search term is required');
+    }
+
+    console.log(`\nSearching for packages matching "${searchTerm}"...`);
+
+    // Call the database search method
+    const results = db.searchPackages(searchTerm.trim());
+
+    // Apply limit
+    const limit = options.limit ? parseInt(options.limit, 10) : 20;
+    const limitedResults = results.slice(0, limit);
+
+    if (limitedResults.length === 0) {
+      console.log(`\nNo packages found matching "${searchTerm}"`);
+      return [];
+    }
+
+    console.log(
+      `\nFound ${limitedResults.length} matching packages${results.length > limitedResults.length ? ` (showing top ${limit} of ${results.length})` : ''}:`
+    );
+
+    // Display results
+    limitedResults.forEach((pac, index) => {
+      console.log(`\n${index + 1}. ${pac.name}`);
+
+      if (pac.version) {
+        console.log(`   Version: ${pac.version}`);
+      }
+
+      if (pac.description) {
+        console.log(`   Description: ${pac.description}`);
+      }
+
+      if (pac.language) {
+        console.log(`   Language: ${pac.language}`);
+      }
+
+      if (pac.category) {
+        console.log(`   Category: ${pac.category}`);
+      }
+
+      if (pac.author) {
+        console.log(`   Author: ${pac.author}`);
+      }
+
+      console.log(`   Usage count: ${pac.usage_count || 0}`);
+    });
+
+    return limitedResults;
+  } catch (error) {
+    ErrorHandler.handle(error, 'Search Packages');
+    return [];
+  }
+};
+
+export {
+  getPacAction,
+  createPacAction,
+  updatePacAction,
+  deletePacAction,
+  searchPacsAction,
+};

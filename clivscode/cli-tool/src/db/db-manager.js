@@ -227,7 +227,6 @@ export class DatabaseManager {
     return stmt.all();
   }
 
-  // Update getPackagesByLanguage to sort by usage
   getPackagesByLanguage(language) {
     const stmt = this.db.prepare(`
     SELECT * FROM packages 
@@ -237,7 +236,6 @@ export class DatabaseManager {
     return stmt.all(language);
   }
 
-  // Update getPackagesByCategory to sort by usage
   getPackagesByCategory(category) {
     const stmt = this.db.prepare(`
     SELECT * FROM packages 
@@ -247,7 +245,6 @@ export class DatabaseManager {
     return stmt.all(category);
   }
 
-  // Add to updatePackage validFields if you want to allow manual usage_count updates
   updatePackage(name, updates) {
     const validFields = [
       'version',
@@ -255,7 +252,7 @@ export class DatabaseManager {
       'author',
       'language',
       'category',
-      'usage_count', // Added usage_count
+      'usage_count',
       'package_path',
       'manifest_path',
     ];

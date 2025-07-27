@@ -177,4 +177,58 @@ const deleteTecAction = async (name, options) => {
   }
 };
 
-export { getTecAction, createTecAction, updateTecAction, deleteTecAction };
+const searchTecsAction = async (searchTerm, options = {}) => {
+  try {
+    // Validate input
+    if (!searchTerm || searchTerm.trim() === '') {
+      throw new Error('Search term is required');
+    }
+
+    console.log(`\nSearching for snippets matching "${searchTerm}"...`);
+
+    // Call the database search method
+    const results = db.searchSnippets(searchTerm.trim());
+
+    // Apply limit
+    const limit = options.limit ? parseInt(options.limit, 10) : 20;
+    const limitedResults = results.slice(0, limit);
+
+    if (limitedResults.length === 0) {
+      console.log(`\nNo snippets found matching "${searchTerm}"`);
+      return [];
+    }
+
+    console.log(
+      `\nFound ${limitedResults.length} matching snippets${results.length > limitedResults.length ? ` (showing top ${limit} of ${results.length})` : ''}:`
+    );
+
+    // Display results
+    limitedResults.forEach((tec, index) => {
+      console.log(`\n${index + 1}. ${tec.name}`);
+      console.log(`   Language: ${tec.language || 'Not specified'}`);
+
+      if (tec.description) {
+        console.log(`   Description: ${tec.description}`);
+      }
+
+      if (tec.category) {
+        console.log(`   Category: ${tec.category}`);
+      }
+
+      console.log(`   Usage count: ${tec.usage_count || 0}`);
+    });
+
+    return limitedResults;
+  } catch (error) {
+    ErrorHandler.handle(error, 'Search Snippets');
+    return [];
+  }
+};
+
+export {
+  getTecAction,
+  createTecAction,
+  updateTecAction,
+  deleteTecAction,
+  searchTecsAction,
+};
