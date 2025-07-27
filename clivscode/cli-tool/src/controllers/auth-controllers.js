@@ -29,7 +29,7 @@ export async function loginAction() {
     // Call the GET /api/users/me endpoint with the token
     const response = await apiClient.get('/api/users/me', {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token.access_token}`,
       },
     });
 
