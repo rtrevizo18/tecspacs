@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ItemCard from "../components/ItemCard";
 import Sidebar from "../components/Sidebar";
 import LoadingCard from "../components/LoadingCard";
 import { apiService } from "../services/api";
 import { TEC, PAC } from "../types";
+import { useSearchContext } from "../contexts/SearchContext";
 
 const Dashboard: React.FC = () => {
   const [filter, setFilter] = useState<"all" | "tecs" | "pacs">("all");
@@ -11,6 +12,7 @@ const Dashboard: React.FC = () => {
   const [allPACs, setAllPACs] = useState<PAC[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { searchQuery, clearSearch } = useSearchContext();
 
   // Fetch all TECs and PACs from API
   useEffect(() => {
@@ -42,7 +44,7 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  const getFilteredItems = () => {
+  const filteredItems = useMemo(() => {
     const tecItems = allTECs.map((tec) => ({
       ...tec,
       itemType: "TEC" as const,
@@ -52,19 +54,54 @@ const Dashboard: React.FC = () => {
       itemType: "PAC" as const,
     }));
 
-    const allItems = [...tecItems, ...pacItems];
+    let allItems = [...tecItems, ...pacItems];
 
+    // Apply type filter
     switch (filter) {
       case "tecs":
-        return allItems.filter((item) => item.itemType === "TEC");
+        allItems = allItems.filter((item) => item.itemType === "TEC");
+        break;
       case "pacs":
-        return allItems.filter((item) => item.itemType === "PAC");
+        allItems = allItems.filter((item) => item.itemType === "PAC");
+        break;
       default:
-        return allItems;
+        // Keep all items
+        break;
     }
-  };
 
-  const filteredItems = getFilteredItems();
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      allItems = allItems.filter((item) => {
+        // Search in title
+        const title = item.itemType === "TEC" ? item.title : item.name;
+        if (title?.toLowerCase().includes(query)) return true;
+
+        // Search in description
+        if (item.description?.toLowerCase().includes(query)) return true;
+
+        // Search in language (for TECs)
+        if (item.itemType === "TEC" && item.language?.toLowerCase().includes(query)) return true;
+
+        // Search in tags (for TECs)
+        if (item.itemType === "TEC" && item.tags?.some(tag => 
+          tag.toLowerCase().includes(query)
+        )) return true;
+
+        // Search in dependencies (for PACs)
+        if (item.itemType === "PAC" && item.dependencies?.some(dep => 
+          dep.toLowerCase().includes(query)
+        )) return true;
+
+        // Search in content (for TECs)
+        if (item.itemType === "TEC" && item.content?.toLowerCase().includes(query)) return true;
+
+        return false;
+      });
+    }
+
+    return allItems;
+  }, [allTECs, allPACs, filter, searchQuery]);
 
   return (
     <div className="pt-20 min-h-screen flex">
@@ -77,13 +114,17 @@ const Dashboard: React.FC = () => {
       <div className="flex-1 ml-80">
         <div className="max-w-6xl mx-auto px-4">
           <div className="mb-6">
+
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-text-primary mb-2">
-                  Feed
+                  {searchQuery.trim() ? 'Search Results' : 'Feed'}
                 </h1>
                 <p className="text-text-accent">
-                  Discover and share TECs and PACs with the community
+                  {searchQuery.trim() 
+                    ? `Results matching "${searchQuery}"`
+                    : 'Discover and share TECs and PACs with the community'
+                  }
                 </p>
               </div>
 

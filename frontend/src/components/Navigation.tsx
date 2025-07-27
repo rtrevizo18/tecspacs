@@ -3,14 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import OutlineButton from "./OutlineButton";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useSearchContext } from "../contexts/SearchContext";
 import { getDisplayName, getDisplayInitial } from "../utils/userUtils";
 
 const Navigation: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { isAuthenticated, isLoading, loginWithRedirect, logout, user } =
     useAuth0();
   const { currentUser } = useAuthContext();
+  const { searchQuery, setSearchQuery } = useSearchContext();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
