@@ -23,14 +23,32 @@ const checkJwt = jwt({
 const populateUser = async (req, res, next) => {
   try {
     if (req.auth) {
+      // First set basic Auth0 info
       req.user = {
         auth0Id: req.auth.sub,
         email: req.auth['https://api.tecspacs.dev/email'] || req.auth.email,
         username: req.auth['https://api.tecspacs.dev/username'] || req.auth.nickname || req.auth.name
       };
+      
+      // Then fetch the actual User document from database
+      const User = require('../models/User');
+      const userDoc = await User.findOne({ auth0Id: req.auth.sub });
+      
+      if (userDoc) {
+        // Merge the database user document with Auth0 info
+        req.user = {
+          ...req.user,
+          _id: userDoc._id,
+          tecs: userDoc.tecs,
+          pacs: userDoc.pacs,
+          createdAt: userDoc.createdAt,
+          updatedAt: userDoc.updatedAt
+        };
+      }
     }
     next();
   } catch (error) {
+    console.error('Error in populateUser middleware:', error);
     next(error);
   }
 };

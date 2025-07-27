@@ -137,6 +137,62 @@ const deletePac = async (req, res) => {
   }
 };
 
+// Update pac
+const updatePac = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, dependencies, files } = req.body;
+    
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ 
+        message: 'Invalid PAC ID format',
+        error: 'ObjectId must be a 24-character hex string',
+        receivedId: id
+      });
+    }
+    
+    // Find the PAC first to check ownership
+    const pac = await Pac.findById(id);
+    
+    if (!pac) {
+      return res.status(404).json({ 
+        message: 'PAC not found',
+        error: 'No PAC found with the provided ID',
+        receivedId: id
+      });
+    }
+    
+    // Check if the current user owns this PAC
+    if (pac.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        message: 'Access denied',
+        error: 'You can only update your own PACs'
+      });
+    }
+    
+    // Update the PAC with provided fields
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (dependencies !== undefined) updateData.dependencies = dependencies;
+    if (files !== undefined) updateData.files = files;
+    
+    // Add updatedAt timestamp
+    updateData.updatedAt = new Date();
+    
+    const updatedPac = await Pac.findByIdAndUpdate(
+      id, 
+      updateData, 
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'username');
+    
+    res.json(updatedPac);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating PAC', error: error.message });
+  }
+};
+
 // Gemini AI integration for summarizing pacs
 const summarizePac = async (req, res) => {
   try {
@@ -211,5 +267,6 @@ module.exports = {
   createPac,
   getPacById,
   deletePac,
+  updatePac,
   summarizePac
 }; 

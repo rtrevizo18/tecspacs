@@ -103,6 +103,15 @@ const deleteTec = async (req, res) => {
       });
     }
     
+    // Check if user is properly populated
+    if (!req.user || !req.user._id) {
+      console.error('User not properly populated in deleteTec:', req.user);
+      return res.status(500).json({ 
+        message: 'Authentication error',
+        error: 'User information not properly loaded'
+      });
+    }
+    
     // Find the TEC first to check ownership
     const tec = await Tec.findById(id);
     
@@ -134,7 +143,75 @@ const deleteTec = async (req, res) => {
     
     res.json({ message: 'TEC deleted successfully' });
   } catch (error) {
+    console.error('Error in deleteTec:', error);
     res.status(500).json({ message: 'Error deleting TEC', error: error.message });
+  }
+};
+
+// Update tec
+const updateTec = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, language, content, tags } = req.body;
+    
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ 
+        message: 'Invalid TEC ID format',
+        error: 'ObjectId must be a 24-character hex string',
+        receivedId: id
+      });
+    }
+    
+    // Check if user is properly populated
+    if (!req.user || !req.user._id) {
+      console.error('User not properly populated in updateTec:', req.user);
+      return res.status(500).json({ 
+        message: 'Authentication error',
+        error: 'User information not properly loaded'
+      });
+    }
+    
+    // Find the TEC first to check ownership
+    const tec = await Tec.findById(id);
+    
+    if (!tec) {
+      return res.status(404).json({ 
+        message: 'TEC not found',
+        error: 'No TEC found with the provided ID',
+        receivedId: id
+      });
+    }
+    
+    // Check if the current user owns this TEC
+    if (tec.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        message: 'Access denied',
+        error: 'You can only update your own TECs'
+      });
+    }
+    
+    // Update the TEC with provided fields
+    const updateData = {};
+    if (title !== undefined && title.trim() !== '') updateData.title = title;
+    if (description !== undefined && description.trim() !== '') updateData.description = description;
+    if (language !== undefined && language.trim() !== '') updateData.language = language;
+    if (content !== undefined && content.trim() !== '') updateData.content = content;
+    if (tags !== undefined) updateData.tags = tags;
+    
+    // Add updatedAt timestamp
+    updateData.updatedAt = new Date();
+    
+    const updatedTec = await Tec.findByIdAndUpdate(
+      id, 
+      updateData, 
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'username');
+    
+    res.json(updatedTec);
+  } catch (error) {
+    console.error('Error in updateTec:', error);
+    res.status(500).json({ message: 'Error updating TEC', error: error.message });
   }
 };
 
@@ -281,6 +358,7 @@ module.exports = {
   createTec,
   getTecById,
   deleteTec,
+  updateTec,
   improveTec,
   summarizeTec
 }; 

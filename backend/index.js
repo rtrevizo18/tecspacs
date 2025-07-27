@@ -23,10 +23,14 @@ mongoose.connect(process.env.MONGO_URI)
 const tecRoutes = require('./routes/tecs');
 const pacRoutes = require('./routes/pacs');
 const userRoutes = require('./routes/users');
+const errorHandler = require('./middleware/errorHandler');
 
 app.use('/api/tecs', tecRoutes);
 app.use('/api/pacs', pacRoutes);
 app.use('/api/users', userRoutes);
+
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
 // Health check route
 app.get('/health', (req, res) => {
