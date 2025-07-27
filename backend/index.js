@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI)
 })
 .catch((err) => {
   console.error('❌ MongoDB connection error:', err);
-  process.exit(1);
+  console.log('⚠️  Server will start anyway for testing...');
 });
 
 // Import and mount routes

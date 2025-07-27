@@ -6,6 +6,10 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Simple rate limiting for AI endpoints
+const aiRequestTimes = new Map();
+const AI_RATE_LIMIT_MS = 60000; // 1 minute between requests
+
 // Get all tecs
 const getAllTecs = async (req, res) => {
   try {
@@ -99,7 +103,8 @@ const deleteTec = async (req, res) => {
       });
     }
     
-    const tec = await Tec.findByIdAndDelete(id);
+    // Find the TEC first to check ownership
+    const tec = await Tec.findById(id);
     
     if (!tec) {
       return res.status(404).json({ 
@@ -107,6 +112,24 @@ const deleteTec = async (req, res) => {
         error: 'No TEC found with the provided ID',
         receivedId: id
       });
+    }
+    
+    // Check if the current user owns this TEC
+    if (tec.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        message: 'Access denied',
+        error: 'You can only delete your own TECs'
+      });
+    }
+    
+    // Delete the TEC
+    await Tec.findByIdAndDelete(id);
+    
+    // Remove TEC from user's tecs array
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.tecs = user.tecs.filter(tecId => tecId.toString() !== id);
+      await user.save();
     }
     
     res.json({ message: 'TEC deleted successfully' });
@@ -134,22 +157,26 @@ const improveTec = async (req, res) => {
       return res.status(404).json({ error: 'Tec not found' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Rate limiting check
+    const now = Date.now();
+    const lastRequest = aiRequestTimes.get('improve');
+    if (lastRequest && (now - lastRequest) < AI_RATE_LIMIT_MS) {
+      const waitTime = Math.ceil((AI_RATE_LIMIT_MS - (now - lastRequest)) / 1000);
+      return res.status(429).json({ 
+        error: 'Rate limit exceeded',
+        message: `Please wait ${waitTime} seconds before making another AI request`,
+        retryAfter: waitTime
+      });
+    }
+    aiRequestTimes.set('improve', now);
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
-    const prompt = `Please suggest improvements for this technical snippet:
+    const prompt = `Improve this code snippet (${tec.language}): ${tec.title}
     
-    Title: ${tec.title}
-    Description: ${tec.description}
-    Language: ${tec.language}
-    Content: ${tec.content}
-    Tags: ${tec.tags ? tec.tags.join(', ') : 'None'}
+    ${tec.content}
     
-    Provide 3-5 specific suggestions for improving this code or technical approach, focusing on:
-    - Performance optimizations
-    - Best practices
-    - Security considerations
-    - Code readability
-    - Modern alternatives`;
+    Provide 3-5 specific improvements for performance, security, readability, and best practices.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -162,8 +189,19 @@ const improveTec = async (req, res) => {
     });
   } catch (error) {
     console.error('Gemini API Error:', error.message);
+    
+    // Handle specific Gemini API errors
+    if (error.message.includes('429') || error.message.includes('quota')) {
+      return res.status(429).json({ 
+        error: 'AI service temporarily unavailable',
+        message: 'Google Gemini API quota exceeded. Please try again later.',
+        details: 'Rate limit or daily quota reached. Consider upgrading your Google AI plan.'
+      });
+    }
+    
     res.status(500).json({ 
       error: 'Failed to generate improvements',
+      message: 'AI service error. Please try again later.',
       details: error.message 
     });
   }
@@ -188,17 +226,26 @@ const summarizeTec = async (req, res) => {
       return res.status(404).json({ error: 'Tec not found' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Rate limiting check
+    const now = Date.now();
+    const lastRequest = aiRequestTimes.get('summarize');
+    if (lastRequest && (now - lastRequest) < AI_RATE_LIMIT_MS) {
+      const waitTime = Math.ceil((AI_RATE_LIMIT_MS - (now - lastRequest)) / 1000);
+      return res.status(429).json({ 
+        error: 'Rate limit exceeded',
+        message: `Please wait ${waitTime} seconds before making another AI request`,
+        retryAfter: waitTime
+      });
+    }
+    aiRequestTimes.set('summarize', now);
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
-    const prompt = `Please provide a concise summary of this technical snippet:
+    const prompt = `Summarize this code snippet (${tec.language}): ${tec.title}
     
-    Title: ${tec.title}
-    Description: ${tec.description}
-    Language: ${tec.language}
-    Content: ${tec.content}
-    Tags: ${tec.tags ? tec.tags.join(', ') : 'None'}
+    ${tec.content}
     
-    Please summarize what this appears to be and its potential use case in 2-3 sentences.`;
+    Provide a 2-3 sentence summary of what this does and its use case.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -211,8 +258,19 @@ const summarizeTec = async (req, res) => {
     });
   } catch (error) {
     console.error('Gemini API Error:', error.message);
+    
+    // Handle specific Gemini API errors
+    if (error.message.includes('429') || error.message.includes('quota')) {
+      return res.status(429).json({ 
+        error: 'AI service temporarily unavailable',
+        message: 'Google Gemini API quota exceeded. Please try again later.',
+        details: 'Rate limit or daily quota reached. Consider upgrading your Google AI plan.'
+      });
+    }
+    
     res.status(500).json({ 
       error: 'Failed to generate summary',
+      message: 'AI service error. Please try again later.',
       details: error.message 
     });
   }
