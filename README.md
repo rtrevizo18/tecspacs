@@ -33,7 +33,7 @@ Key features include:
 
 ### Frontend
 - React
-- TypeScript
+- JavaScript
 - Tailwind CSS
 - Auth0 (SPA SDK)
 
