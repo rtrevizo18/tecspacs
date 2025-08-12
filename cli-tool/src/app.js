@@ -19,6 +19,7 @@ async function main() {
     await loadCommands(program);
     await loadOnlineCommands(program);
 
+    //FIXME: Parse async...
     program.parse();
   } catch (err) {
     ErrorHandler.handle(err, 'Application Startup');

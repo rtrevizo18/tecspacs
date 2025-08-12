@@ -38,35 +38,16 @@ export class StorageManager {
   }
 
   static async storeTec(tec) {
-    const { name, description, language, category, content } = tec;
+    const { name } = tec;
     const rollbackTasks = [];
 
-    const paths = envPaths('tcspcs');
-    const snippetsDir = path.join(paths.data, 'snippets');
-
     try {
-      await FileManager.ensureDirectory(snippetsDir);
-      const tecId = db.createSnippet(name, description, language, category, '');
+      const tecId = db.createSnippet(tec);
       rollbackTasks.push(() => db.deleteSnippet(name));
-
-      const extension = StorageManager.getFileExtension(language);
-      const fileName = `${tecId}.${extension}`;
-      const fullFilePath = path.join(snippetsDir, fileName);
-
-      // Save the file content
-      await FileManager.saveFile(fullFilePath, content);
-      rollbackTasks.push(() => FileManager.deleteFile(fullFilePath));
-
-      // Update the database entry with the correct file path
-      const updateResult = db.updateSnippet(name, { file_path: fullFilePath });
-      if (!updateResult) {
-        throw new Error('Failed to update snippet with file path');
-      }
 
       return {
         id: tecId,
         name,
-        filePath: fullFilePath,
       };
     } catch (err) {
       // Execute rollback
@@ -157,14 +138,8 @@ export class StorageManager {
       }
 
       rollbackTasks.push(() => {
-        const newId = db.createSnippet(
-          snippet.name,
-          snippet.description,
-          snippet.language,
-          snippet.category,
-          snippet.file_path
-        );
         // Note: This won't preserve the original ID, but will restore the data
+        db.createSnippet({ snippet });
       });
 
       // Delete file

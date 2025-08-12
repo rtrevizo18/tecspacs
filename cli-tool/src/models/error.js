@@ -46,3 +46,10 @@ export class ConfigurationError extends ProgramError {
     this.name = 'ConfigurationError';
   }
 }
+
+export class UserError extends ProgramError {
+  constructor(message) {
+    super(message, 'USER_ERROR');
+    this.name = 'UserError';
+  }
+}

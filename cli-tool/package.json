@@ -1,10 +1,7 @@
 {
   "name": "tecspacs",
-  "version": "1.0.3",
-  "engines": {
-    "node": "<=18.18.0"
-  },
-  "description": "Command line tool for tecspacs",
+  "version": "1.0.4",
+  "description": "Localized package manager with online sharing",
   "license": "MIT",
   "author": "rtrevizo18",
   "type": "module",
@@ -12,11 +9,12 @@
     "tecspacs": "./bin/tecspacs.js"
   },
   "scripts": {
-    "start": "node ./bin/tecspacs.js"
+    "start": "node ./bin/tecspacs.js",
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
   },
   "dependencies": {
     "axios": "^1.11.0",
-    "better-sqlite3": "^12.2.0",
+    "bcrypt": "^6.0.0",
     "clipboardy": "^4.0.0",
     "commander": "^14.0.0",
     "dotenv": "^17.2.1",
@@ -24,10 +22,11 @@
     "inquirer": "^12.8.2",
     "jwt-decode": "^4.0.0",
     "open": "^10.2.0",
-    "openid-client": "^6.6.2"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "eslint": "^9.32.0",
+    "jest": "^30.0.5",
     "prettier": "^3.6.2"
   }
 }

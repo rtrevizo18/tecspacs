@@ -49,7 +49,7 @@ const updateTecPrompter = async () => {
     {
       type: 'input',
       name: 'language',
-      message: 'What language are you using (Use full name)?',
+      message: 'What language are you using?',
       validate: input => {
         if (!input || input.trim() === '') {
           return 'Language is required';
@@ -106,7 +106,7 @@ const createPacPrompter = async () => {
     {
       type: 'input',
       name: 'language',
-      message: 'What language are you using (Use full name)?',
+      message: 'What language are you using?',
       validate: input => {
         if (!input || input.trim() === '') {
           return 'Language is required';
@@ -127,7 +127,7 @@ const createPacPrompter = async () => {
     {
       type: 'input',
       name: 'sourcePath',
-      message: 'Please enter the source path of your package:',
+      message: 'Please enter the source directory of your package:',
       validate: input => {
         if (!input || input.trim() === '') {
           return 'Source path is required';
@@ -176,7 +176,7 @@ const updatePacPrompter = async () => {
     {
       type: 'input',
       name: 'sourcePath',
-      message: 'Please enter the source path of your package:',
+      message: 'Please enter the source directory of your package:',
       validate: input => {
         if (!input || input.trim() === '') {
           return 'Source path is required';
