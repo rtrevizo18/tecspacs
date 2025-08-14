@@ -41,21 +41,21 @@ const createTecPrompter = async () => {
 
 const updateTecPrompter = async () => {
   const answers = await inquirer.prompt([
+    // FIXME: If string is empty, then make it null
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Update snippet name?',
+    },
     {
       type: 'input',
       name: 'description',
-      message: 'Add a description?',
+      message: 'Update the description?',
     },
     {
       type: 'input',
       name: 'language',
       message: 'What language are you using?',
-      validate: input => {
-        if (!input || input.trim() === '') {
-          return 'Language is required';
-        }
-        return true;
-      },
     },
     {
       type: 'input',

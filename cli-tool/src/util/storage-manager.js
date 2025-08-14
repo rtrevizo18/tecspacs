@@ -5,26 +5,26 @@ import path from 'path';
 import envPaths from 'env-paths';
 
 export class StorageManager {
-  static getFileExtension(language) {
-    const extensions = {
-      javascript: 'js',
-      typescript: 'ts',
-      python: 'py',
-      java: 'java',
-      csharp: 'cs',
-      cpp: 'cpp',
-      c: 'c',
-      html: 'html',
-      css: 'css',
-      json: 'json',
-      yaml: 'yml',
-      markdown: 'md',
-      sql: 'sql',
-      bash: 'sh',
-      powershell: 'ps1',
-    };
-    return extensions[language.toLowerCase()] || 'txt';
-  }
+  // static getFileExtension(language) {
+  //   const extensions = {
+  //     javascript: 'js',
+  //     typescript: 'ts',
+  //     python: 'py',
+  //     java: 'java',
+  //     csharp: 'cs',
+  //     cpp: 'cpp',
+  //     c: 'c',
+  //     html: 'html',
+  //     css: 'css',
+  //     json: 'json',
+  //     yaml: 'yml',
+  //     markdown: 'md',
+  //     sql: 'sql',
+  //     bash: 'sh',
+  //     powershell: 'ps1',
+  //   };
+  //   return extensions[language.toLowerCase()] || 'txt';
+  // }
 
   static async rollback(rollbackTasks) {
     // Execute rollback tasks in reverse order
@@ -42,8 +42,9 @@ export class StorageManager {
     const rollbackTasks = [];
 
     try {
-      const tecId = db.createSnippet(tec);
-      rollbackTasks.push(() => db.deleteSnippet(name));
+      const tecId = await db.createSnippet(tec);
+      // Only rollbacks if completed creating snippet
+      rollbackTasks.push(async () => await db.deleteSnippet(name));
 
       return {
         id: tecId,
@@ -53,140 +54,81 @@ export class StorageManager {
       // Execute rollback
       await StorageManager.rollback(rollbackTasks);
 
-      // Then throw the original error with context
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to store tec "${name}": ${err.message}`,
-        snippetsDir
-      );
+      throw err;
     }
   }
 
-  static async updateTec(name, updates) {
+  static async updateTec(name, updatedSnippet) {
     const rollbackTasks = [];
     let originalSnippet = null;
 
     try {
       // Get current snippet data for rollback
-      originalSnippet = db.getSnippet(name);
-      if (!originalSnippet) {
-        throw new Error(`Snippet "${name}" not found`);
-      }
+      originalSnippet = await db.getSnippet(name);
 
-      // Update database first
-      const updateResult = db.updateSnippet(name, updates);
-      if (!updateResult) {
-        throw new Error('Failed to update snippet in database');
-      }
+      await db.updateSnippet(name, updatedSnippet);
 
-      rollbackTasks.push(() => {
-        db.updateSnippet(name, {
-          description: originalSnippet.description,
-          language: originalSnippet.language,
-          category: originalSnippet.category,
-          file_path: originalSnippet.file_path,
-        });
+      rollbackTasks.push(async () => {
+        await db.updateSnippet(name, originalSnippet);
       });
 
+      // NOTE: Being stored in db now
       // If content is being updated, update the file
-      if (updates.content) {
-        const originalContent = await FileManager.readFile(
-          originalSnippet.file_path
-        );
-        rollbackTasks.push(() =>
-          FileManager.saveFile(originalSnippet.file_path, originalContent)
-        );
+      // if (updates.content) {
+      //   const originalContent = await FileManager.readFile(
+      //     originalSnippet.file_path
+      //   );
+      //   rollbackTasks.push(() =>
+      //     FileManager.saveFile(originalSnippet.file_path, originalContent)
+      //   );
 
-        await FileManager.saveFile(originalSnippet.file_path, updates.content);
-      }
+      //   await FileManager.saveFile(originalSnippet.file_path, updates.content);
+      // }
 
-      return db.getSnippet(name);
+      return await db.getSnippet(name);
     } catch (err) {
       await StorageManager.rollback(rollbackTasks);
-
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to update tec "${name}": ${err.message}`,
-        originalSnippet?.file_path || 'unknown'
-      );
+      throw err;
     }
   }
 
   static async deleteTec(name) {
+    // Shouldn't need rollbackTasks, but just to keep things consistent
     const rollbackTasks = [];
 
     try {
       // Get snippet data before deletion
       const snippet = db.getSnippet(name);
+
       if (!snippet) {
         throw new Error(`Snippet "${name}" not found`);
       }
 
-      // Read file content for potential rollback
-      const fileContent = await FileManager.readFile(snippet.file_path);
-
       // Delete from database first
-      const deleteResult = db.deleteSnippet(name);
-      if (!deleteResult) {
-        throw new Error('Failed to delete snippet from database');
-      }
+      await db.deleteSnippet(name);
 
-      rollbackTasks.push(() => {
-        // Note: This won't preserve the original ID, but will restore the data
-        db.createSnippet({ snippet });
+      rollbackTasks.push(async () => {
+        await db.createSnippet({ snippet });
       });
-
-      // Delete file
-      await FileManager.deleteFile(snippet.file_path);
-      rollbackTasks.push(() =>
-        FileManager.saveFile(snippet.file_path, fileContent)
-      );
-
-      return true;
     } catch (err) {
       await StorageManager.rollback(rollbackTasks);
-
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to delete tec "${name}": ${err.message}`,
-        'unknown'
-      );
+      throw err;
     }
   }
 
   static async getTec(name) {
     try {
-      const snippet = db.getSnippet(name); // Keep this
+      const snippet = await db.getSnippet(name);
       if (!snippet) {
         return null;
       }
-
-      const content = await FileManager.readFile(snippet.file_path);
-
-      return {
-        ...snippet,
-        content,
-      };
+      return snippet;
     } catch (err) {
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to get tec "${name}": ${err.message}`,
-        'unknown' // Change this since snippet won't be accessible
-      );
+      throw err;
     }
   }
+
+  // FIXME: NEED TO LOOK AT PACS FURTHER
 
   static async storePac(pac) {
     const {
@@ -463,7 +405,7 @@ export class StorageManager {
       );
     }
   }
-
+  // FIXME: CREATE DB METHODS FOR UPDATING ONLINE_ID
   /**
    * Update the online_id field for a tec in the local database
    * @param {string} name - The name of the tec

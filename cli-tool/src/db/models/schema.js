@@ -32,6 +32,7 @@ export const SCHEMAS = [
       language TEXT,
       category TEXT,
       usage_count INTEGER DEFAULT 0,
+      online_id TEXT,
       package_path TEXT NOT NULL,
       manifest_path TEXT NOT NULL,
       user_id INTEGER REFERENCES users(id)

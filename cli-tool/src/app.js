@@ -1,9 +1,7 @@
 import { Command } from 'commander';
 import { loadCommands } from './commands/commands.js';
 import { ErrorHandler } from './util/error-handler.js';
-import { db } from './db/db-manager.js';
-
-import { loadOnlineCommands } from './commands/online-commands.js';
+import { DatabaseManager } from './db/db-manager.js';
 
 const program = new Command();
 
@@ -14,13 +12,12 @@ program
 
 async function main() {
   try {
-    await db.initialize();
+    // await db.initialize();
 
     await loadCommands(program);
-    await loadOnlineCommands(program);
 
     //FIXME: Parse async...
-    program.parse();
+    await program.parseAsync();
   } catch (err) {
     ErrorHandler.handle(err, 'Application Startup');
   }
@@ -29,12 +26,12 @@ async function main() {
 // Handle graceful shutdown
 process.on('SIGINT', () => {
   console.log('\nShutting down...');
-  db.close();
+  // db.close();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  db.close();
+  // db.close();
   process.exit(0);
 });
 

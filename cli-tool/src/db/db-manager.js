@@ -231,7 +231,14 @@ export class DatabaseManager {
   // For processing inputs, for null vs. undefined expressions
   async updateSnippetValidator(name, snippet) {
     // If property isn't available, just make it null and it'll be skipped over
-    const KEYS = ['name', 'description', 'language', 'category', 'content'];
+    const KEYS = [
+      'name',
+      'description',
+      'language',
+      'category',
+      'content',
+      'online_id',
+    ];
     KEYS.forEach(val => {
       if (!(val in snippet)) {
         snippet[val] = null;
@@ -268,7 +275,7 @@ export class DatabaseManager {
   }
 
   async updateSnippet(name, snippet) {
-    const stmt = `UPDATE snippets SET name = ?, description = ?, language = ?, category = ?, content = ? WHERE name = ?`;
+    const stmt = `UPDATE snippets SET name = ?, description = ?, language = ?, category = ?, content = ?, online_id = ? WHERE name = ?`;
 
     try {
       const [validatedSnippet, originalSnippet] =
@@ -290,6 +297,9 @@ export class DatabaseManager {
         validatedSnippet.content === null
           ? originalSnippet.content
           : validatedSnippet.content,
+        validatedSnippet.online_id === null
+          ? originalSnippet.online_id
+          : validatedSnippet.online_id,
         name, // For WHERE clause
       ]);
     } catch (error) {
@@ -448,6 +458,7 @@ export class DatabaseManager {
       'version',
       'package_path',
       'manifest_path',
+      'online_id',
     ];
     KEYS.forEach(val => {
       if (!(val in pkg)) {
@@ -483,7 +494,7 @@ export class DatabaseManager {
   }
 
   async updatePackage(name, pkg) {
-    const stmt = `UPDATE packages SET name = ?, description = ?, language = ?, category = ?, version = ?, package_path = ?, manifest_path = ? WHERE name = ?`;
+    const stmt = `UPDATE packages SET name = ?, description = ?, language = ?, category = ?, version = ?, package_path = ?, manifest_path = ?, online_id = ? WHERE name = ?`;
 
     try {
       const [validatedPackage, originalPackage] =
@@ -511,6 +522,9 @@ export class DatabaseManager {
         validatedPackage.manifest_path === null
           ? originalPackage.manifest_path
           : validatedPackage.manifest_path,
+        validatedPackage.online_id === null
+          ? originalPackage.online_id
+          : validatedPackage.online_id,
         name, // For WHERE clause
       ]);
     } catch (error) {

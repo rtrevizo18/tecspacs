@@ -246,8 +246,12 @@ export class FileManager {
    * @param {Object} options - Copy options
    * @returns {Promise<void>}
    */
-  static async copyDirectory(source, destination, options = {}) {
-    const { overwrite = true } = options;
+  static async copyDirectory(
+    source,
+    destination,
+    options = { overwrite: true }
+  ) {
+    const { overwrite } = options;
 
     try {
       // Check if source exists and is a directory

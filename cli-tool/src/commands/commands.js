@@ -5,7 +5,7 @@ import {
   deleteTecPrompter,
   updatePacPrompter,
   updateTecPrompter,
-} from './prompts/prompts.js';
+} from './prompts.js';
 import {
   getTecAction,
   createTecAction,
@@ -22,29 +22,35 @@ import {
 } from '../controllers/pacs-controllers.js';
 
 export async function loadCommands(program) {
+  // FIXME: Make this a search, then make user select the tec or package
+  // FIXME: Make this tec/package agnostic
   program
-    .command('get-tec <name>')
+    .command('get <name>')
     .description('Get a snippet by name')
+    .option('-o, --online', 'Search for your online snippets')
     .action(getTecAction);
 
+  // FIXME: Make this tec/package agnostic
   program
-    .command('create-tec <name>')
+    .command('create <name>')
     .description('Create a new snippet')
     .action(async name => {
       const answers = await createTecPrompter();
       await createTecAction(name, answers);
     });
 
+  // FIXME: Make this tec/package agnostic
   program
-    .command('update-tec <name>')
+    .command('update <name>')
     .description('Update an existing snippet')
     .action(async name => {
       const answers = await updateTecPrompter();
       await updateTecAction(name, answers);
     });
 
+  // FIXME: Make this tec/package agnostic
   program
-    .command('delete-tec <name>')
+    .command('delete <name>')
     .description('Delete a snippet')
     .action(async name => {
       const willDelete = await deleteTecPrompter();
@@ -55,51 +61,53 @@ export async function loadCommands(program) {
       }
     });
 
+  // List all tecs command
+  //FIXME: So it'll show a list
   program
-    .command('get-pac <name>')
-    .description('Get a package by name')
-    .action(getPacAction);
+    .command('list')
+    .description('List all your code')
+    .option('-o, --online', 'List all of your code online')
+    .action(getAllTecsAction);
 
+  // Login command
+  //FIXME: Just take a look at this
   program
-    .command('create-pac <name>')
-    .description('Create a new package')
-    .action(async name => {
-      const answers = await createPacPrompter();
-      await createPacAction(name, answers);
-    });
+    .command('login')
+    .description('Login to your tecspacs account')
+    .action(loginAction);
 
+  // Logout command
+  //FIXME: Just take a look at this
   program
-    .command('update-pac <name>')
-    .description('Update an existing package')
-    .action(async name => {
-      const answers = await updatePacPrompter();
-      await updatePacAction(name, answers);
-    });
+    .command('logout')
+    .description('Logout from your account')
+    .action(logoutAction);
 
+  // Profile command
+  //FIXME: Just take a look at this
   program
-    .command('delete-pac <name>')
-    .description('Delete a package')
-    .action(async name => {
-      const willDelete = await deletePacPrompter();
-      if (willDelete) {
-        await deletePacAction(name);
-      } else {
-        console.log('Operation canceled');
-      }
-    });
+    .command('whoami')
+    .description('View your profile information')
+    .action(profileAction);
 
-  // Add search commands for local TECs and PACs
+  //FIXME: Make this tec/package agnostic
   program
-    .command('search-tecs <searchTerm>')
-    .description('Search for local snippets by name, description, or category')
-    .option('-l, --limit <limit>', 'Maximum number of results to display', '20')
-    .action(searchTecsAction);
+    .command('publish <name>')
+    .description('Publish a local snippet to your online account')
+    .option('-t, --tags <tags>', 'Comma-separated tags for the snippet')
+    .action(publishTecAction);
 
+  // Improve tec command with AI
+  //FIXME: Make this tec/package agnostic
   program
-    .command('search-pacs <searchTerm>')
-    .description(
-      'Search for local packages by name, description, category, or author'
-    )
-    .option('-l, --limit <limit>', 'Maximum number of results to display', '20')
-    .action(searchPacsAction);
+    .command('improve <id>')
+    .description('Get AI-powered improvement suggestions for your snippet')
+    .action(improveTecAction);
+
+  // Summarize tec command with AI
+  //FIXME: Make this tec/package agnostic
+  program
+    .command('summarize <id>')
+    .description('Get an AI-generated summary of your snippet')
+    .action(summarizeTecAction);
 }

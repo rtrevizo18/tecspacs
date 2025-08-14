@@ -164,7 +164,7 @@ const deleteTecAction = async (name, options) => {
     }
 
     // Delete the snippet
-    const result = await StorageManager.deleteTec(name.trim());
+    await StorageManager.deleteTec(name.trim());
 
     if (result) {
       console.log(`\nDeleted snippet "${name}"`);
