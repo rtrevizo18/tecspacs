@@ -1,144 +1,130 @@
-import { db } from '../db/db-manager.js';
 import { FileManager } from './file-manager.js';
-import { FileSystemError } from '../models/error.js';
+import { FileSystemError, ProgramError } from '../models/error.js';
 import path from 'path';
 import envPaths from 'env-paths';
 
 export class StorageManager {
-  // static getFileExtension(language) {
-  //   const extensions = {
-  //     javascript: 'js',
-  //     typescript: 'ts',
-  //     python: 'py',
-  //     java: 'java',
-  //     csharp: 'cs',
-  //     cpp: 'cpp',
-  //     c: 'c',
-  //     html: 'html',
-  //     css: 'css',
-  //     json: 'json',
-  //     yaml: 'yml',
-  //     markdown: 'md',
-  //     sql: 'sql',
-  //     bash: 'sh',
-  //     powershell: 'ps1',
-  //   };
-  //   return extensions[language.toLowerCase()] || 'txt';
-  // }
+  constructor(db) {
+    this.db = db;
+  }
 
-  static async rollback(rollbackTasks) {
+  async rollback(rollbackTasks) {
     // Execute rollback tasks in reverse order
     for (let i = rollbackTasks.length - 1; i >= 0; i--) {
       try {
         await rollbackTasks[i]();
-      } catch (rollbackError) {
-        console.error('Rollback error:', rollbackError.message);
+      } catch (error) {
+        console.error('Rollback error:', error.message);
       }
     }
   }
 
-  static async storeTec(tec) {
+  async storeTec(tec) {
     const { name } = tec;
     const rollbackTasks = [];
 
     try {
-      const tecId = await db.createSnippet(tec);
+      const tecId = await this.db.createSnippet(tec);
       // Only rollbacks if completed creating snippet
-      rollbackTasks.push(async () => await db.deleteSnippet(name));
+      rollbackTasks.push(async () => await this.db.deleteSnippet(name));
 
       return {
         id: tecId,
         name,
       };
-    } catch (err) {
+    } catch (error) {
       // Execute rollback
-      await StorageManager.rollback(rollbackTasks);
+      await this.rollback(rollbackTasks);
 
-      throw err;
+      throw error;
     }
   }
 
-  static async updateTec(name, updatedSnippet) {
+  async updateTec(name, updatedSnippet) {
     const rollbackTasks = [];
     let originalSnippet = null;
 
     try {
       // Get current snippet data for rollback
-      originalSnippet = await db.getSnippet(name);
+      originalSnippet = await this.db.getSnippet(name);
 
-      await db.updateSnippet(name, updatedSnippet);
+      await this.db.updateSnippet(name, updatedSnippet);
 
       rollbackTasks.push(async () => {
-        await db.updateSnippet(name, originalSnippet);
+        await this.db.updateSnippet(name, originalSnippet);
       });
 
-      // NOTE: Being stored in db now
-      // If content is being updated, update the file
-      // if (updates.content) {
-      //   const originalContent = await FileManager.readFile(
-      //     originalSnippet.file_path
-      //   );
-      //   rollbackTasks.push(() =>
-      //     FileManager.saveFile(originalSnippet.file_path, originalContent)
-      //   );
-
-      //   await FileManager.saveFile(originalSnippet.file_path, updates.content);
-      // }
-
-      return await db.getSnippet(name);
-    } catch (err) {
-      await StorageManager.rollback(rollbackTasks);
-      throw err;
+      return await this.db.getSnippet(name);
+    } catch (error) {
+      await this.rollback(rollbackTasks);
+      throw error;
     }
   }
 
-  static async deleteTec(name) {
+  async deleteTec(name) {
     // Shouldn't need rollbackTasks, but just to keep things consistent
     const rollbackTasks = [];
 
     try {
       // Get snippet data before deletion
-      const snippet = db.getSnippet(name);
+      const snippet = await this.db.getSnippet(name);
 
       if (!snippet) {
-        throw new Error(`Snippet "${name}" not found`);
+        throw new Error(`Snippet ${name} does not exist!`);
       }
 
       // Delete from database first
-      await db.deleteSnippet(name);
+      await this.db.deleteSnippet(name);
 
       rollbackTasks.push(async () => {
-        await db.createSnippet({ snippet });
+        await this.db.createSnippet(snippet);
       });
-    } catch (err) {
-      await StorageManager.rollback(rollbackTasks);
-      throw err;
+    } catch (error) {
+      await this.rollback(rollbackTasks);
+      throw error;
     }
   }
 
-  static async getTec(name) {
+  async getTec(name) {
     try {
-      const snippet = await db.getSnippet(name);
+      const snippet = await this.db.getSnippet(name);
       if (!snippet) {
         return null;
       }
       return snippet;
-    } catch (err) {
-      throw err;
+    } catch (error) {
+      throw error;
     }
   }
 
   // FIXME: NEED TO LOOK AT PACS FURTHER
 
-  static async storePac(pac) {
+  // Package methods
+  // async createPackage({
+  //   name,
+  //   version,
+  //   description,
+  //   language,
+  //   category,
+  //   package_path,
+  //   manifest_path,
+  //   author = null,
+  // }) {
+  //   const stmt = `
+  //     INSERT INTO packages (name, version, description, author, language, category, package_path, manifest_path)
+  //     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  //   `;
+
+  // Going to change b/c a package_path should be mandatory!!!
+  async storePac(pac) {
     const {
       name,
       version,
       description,
-      author,
+      author = null,
       language,
       category,
-      sourcePath,
+      package_path,
     } = pac;
     const rollbackTasks = [];
 
@@ -151,34 +137,30 @@ export class StorageManager {
       // Create package directory
       const packageDir = path.join(packagesDir, name);
       await FileManager.ensureDirectory(packageDir);
-      rollbackTasks.push(() => FileManager.deleteDirectory(packageDir));
+      rollbackTasks.push(
+        async () => await FileManager.deleteDirectory(packageDir)
+      );
 
-      // Copy source files/folders recursively if sourcePath is provided
-      if (sourcePath) {
-        // Check if source path exists
-        if (!(await FileManager.exists(sourcePath))) {
-          throw new Error(`Source path does not exist: ${sourcePath}`);
-        }
-
-        const sourceStats = await FileManager.getStats(sourcePath);
-
-        if (sourceStats.isDirectory()) {
-          // Copy entire directory structure to a 'content' subdirectory
-          const contentDir = path.join(packageDir, 'content');
-          await FileManager.copyDirectory(sourcePath, contentDir);
-        } else if (sourceStats.isFile()) {
-          // Copy single file to package directory
-          const fileName = path.basename(sourcePath);
-          const destinationPath = path.join(packageDir, fileName);
-          await FileManager.copyFile(sourcePath, destinationPath);
-        } else {
-          throw new Error(
-            `Source path is neither a file nor directory: ${sourcePath}`
-          );
-        }
+      // Copy source files/folders recursively
+      if (!(await FileManager.exists(package_path))) {
+        throw new Error(`Source path does not exist: ${package_path}`);
       }
 
-      const manifestPath = path.join(packageDir, 'package.json');
+      const sourceStats = await FileManager.getStats(package_path);
+      if (sourceStats.isDirectory()) {
+        await FileManager.copyDirectory(package_path, packageDir);
+      } else if (sourceStats.isFile()) {
+        // Copy single file to package directory
+        const fileName = path.basename(package_path);
+        const destinationPath = path.join(packageDir, fileName);
+        await FileManager.copyFile(package_path, destinationPath);
+      } else {
+        throw new Error(
+          `Source path is neither a file nor directory: ${package_path}`
+        );
+      }
+
+      const manifest_path = path.join(packageDir, 'pacs.json');
       const manifest = {
         name,
         version,
@@ -187,203 +169,160 @@ export class StorageManager {
         language,
         category,
         created_at: new Date().toISOString(),
-        source_path: sourcePath || null,
-        has_content: sourcePath ? true : false,
+        package_path,
       };
 
-      await FileManager.saveJSON(manifestPath, manifest);
+      await FileManager.saveJSON(manifest_path, manifest);
 
       // Create database entry
-      const pacId = db.createPackage(
+      const pacId = await this.db.createPackage({
         name,
         version,
         description,
         author,
         language,
         category,
-        packageDir,
-        manifestPath
-      );
-      rollbackTasks.push(() => db.deletePackage(name));
+        package_path: packageDir,
+        manifest_path,
+      });
+      // Again, probably not needed but for consistency sake
+      rollbackTasks.push(async () => await this.db.deletePackage(name));
 
       return {
         id: pacId,
         name,
-        packagePath: packageDir,
-        manifestPath,
-        sourcesCopied: sourcePath ? true : false,
+        package_path: packageDir,
+        manifest_path: manifest_path,
       };
-    } catch (err) {
-      await StorageManager.rollback(rollbackTasks);
+    } catch (error) {
+      await this.rollback(rollbackTasks);
+      throw error;
+    }
+  }
 
-      if (err instanceof FileSystemError) {
-        throw err;
+  // Helper manifest file contents, helper for updatePac
+  async updateManifest(originalPackage, updatedPackage, originalManifest) {
+    // Only add properties from updatedPackage if they're manifest properties
+    // Which we can check by getting the keys from originalManifest
+    const updatedManifest = { ...originalManifest };
+    for (const key of Object.keys(updatedPackage)) {
+      if (key in originalManifest) {
+        updatedManifest[key] = updatedPackage[key];
       }
+    }
 
-      throw new FileSystemError(
-        `Failed to store package "${name}": ${err.message}`,
-        packagesDir
+    await FileManager.ensureDirectory(
+      path.dirname(originalPackage.manifest_path)
+    );
+
+    // Save time last modified
+    updatedManifest.modified_at = new Date().toISOString();
+
+    await FileManager.saveJSON(originalPackage.manifest_path, updatedManifest);
+  }
+
+  // Update file contents of package, helper for updatePac
+  async updateContents(originalPackage, updatedPackage) {
+    // Clear existing content first
+    const packageContentDir = originalPackage.package_path;
+
+    if (await FileManager.exists(packageContentDir)) {
+      await FileManager.deleteDirectory(packageContentDir);
+    }
+
+    await FileManager.ensureDirectory(packageContentDir);
+
+    // Copy new source
+    const sourceStats = await FileManager.getStats(updatedPackage.package_path);
+
+    if (sourceStats.isDirectory()) {
+      await FileManager.copyDirectory(
+        updatedPackage.package_path,
+        packageContentDir
+      );
+    } else if (sourceStats.isFile()) {
+      const fileName = path.basename(updatedPackage.package_path);
+      const destinationPath = path.join(packageContentDir, fileName);
+      await FileManager.copyFile(updatedPackage.package_path, destinationPath);
+    } else {
+      throw new ProgramError(
+        'Package path is neither a file nor directory: ' +
+          updatedPackage.package_path
       );
     }
   }
 
-  static async updatePac(name, updates) {
+  async updatePac(name, updatedPackage) {
     const rollbackTasks = [];
     let originalPackage = null;
 
     try {
-      originalPackage = db.getPackage(name);
-      if (!originalPackage) {
-        throw new Error(`Package "${name}" not found`);
-      }
+      originalPackage = await this.db.getPackage(name);
 
-      // Update database
-      const updateResult = db.updatePackage(name, updates);
-      if (!updateResult) {
-        throw new Error('Failed to update package in database');
-      }
-
-      rollbackTasks.push(() => {
-        db.updatePackage(name, {
-          version: originalPackage.version,
-          description: originalPackage.description,
-          author: originalPackage.author,
-          language: originalPackage.language,
-          category: originalPackage.category,
-        });
-      });
-
-      // Update manifest file if needed
-      if (updates.version || updates.description || updates.author) {
-        const originalManifest = await FileManager.readJSON(
-          originalPackage.manifest_path
-        );
-        rollbackTasks.push(() =>
-          FileManager.saveJSON(originalPackage.manifest_path, originalManifest)
-        );
-
-        const updatedManifest = {
-          ...originalManifest,
-          ...updates,
-        };
-
-        await FileManager.saveJSON(
-          originalPackage.manifest_path,
-          updatedManifest
-        );
-      }
+      const originalManifest = await FileManager.readJSON(
+        originalPackage.manifest_path
+      );
+      rollbackTasks.push(
+        async () =>
+          await FileManager.saveJSON(
+            originalPackage.manifest_path,
+            originalManifest
+          )
+      );
 
       // Handle source path updates (re-copy files)
-      if (updates.sourcePath) {
-        // Clear existing content first
-        const packageContentDir = path.join(
-          originalPackage.package_path,
-          'content'
-        );
-
-        // Backup existing content if it exists
-        if (await FileManager.exists(packageContentDir)) {
-          await FileManager.deleteDirectory(packageContentDir);
-        }
-
-        // Copy new source
-        const sourceStats = await FileManager.getStats(updates.sourcePath);
-
-        if (sourceStats.isDirectory()) {
-          await FileManager.copyDirectory(
-            updates.sourcePath,
-            packageContentDir
-          );
-        } else if (sourceStats.isFile()) {
-          await FileManager.ensureDirectory(packageContentDir);
-          const fileName = path.basename(updates.sourcePath);
-          const destinationPath = path.join(packageContentDir, fileName);
-          await FileManager.copyFile(updates.sourcePath, destinationPath);
-        }
-
-        // Update manifest to reflect new source
-        const manifest = await FileManager.readJSON(
-          originalPackage.manifest_path
-        );
-        manifest.source_path = updates.sourcePath;
-        manifest.has_content = true;
-        manifest.updated_at = new Date().toISOString();
-        await FileManager.saveJSON(originalPackage.manifest_path, manifest);
+      if (updatedPackage.package_path) {
+        await this.updateContents(originalPackage, updatedPackage);
       }
 
-      return db.getPackage(name);
-    } catch (err) {
-      await StorageManager.rollback(rollbackTasks);
-
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to update package "${name}": ${err.message}`,
-        originalPackage?.package_path || 'unknown'
+      // Update manifest to reflect changes
+      await this.updateManifest(
+        originalPackage,
+        updatedPackage,
+        originalManifest
       );
+
+      return this.db.getPackage(name);
+    } catch (error) {
+      await this.rollback(rollbackTasks);
+      throw error;
     }
   }
 
-  static async deletePac(name) {
+  async deletePac(name) {
     const rollbackTasks = [];
     let pkg = null;
 
     try {
-      pkg = db.getPackage(name);
-      if (!pkg) {
-        throw new Error(`Package "${name}" not found`);
-      }
+      pkg = await this.db.getPackage(name);
 
       // Read manifest for rollback
       const manifest = await FileManager.readJSON(pkg.manifest_path);
 
       // Delete from database
-      const deleteResult = db.deletePackage(name);
-      if (!deleteResult) {
-        throw new Error('Failed to delete package from database');
-      }
+      await this.db.deletePackage(name);
 
-      rollbackTasks.push(() => {
-        db.createPackage(
-          pkg.name,
-          pkg.version,
-          pkg.description,
-          pkg.author,
-          pkg.language,
-          pkg.category,
-          pkg.package_path,
-          pkg.manifest_path
-        );
+      rollbackTasks.push(async () => {
+        await this.db.createPackage(pkg);
       });
 
       // Delete package directory
       await FileManager.deleteDirectory(pkg.package_path);
-      rollbackTasks.push(() => {
-        FileManager.ensureDirectory(pkg.package_path);
-        FileManager.saveJSON(pkg.manifest_path, manifest);
+      // FIXME: Create temp directory copy
+      rollbackTasks.push(async () => {
+        await FileManager.ensureDirectory(pkg.package_path);
+        await FileManager.saveJSON(pkg.manifest_path, manifest);
       });
-
-      return true;
-    } catch (err) {
-      await StorageManager.rollback(rollbackTasks);
-
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to delete package "${name}": ${err.message}`,
-        'unknown'
-      );
+    } catch (error) {
+      await this.rollback(rollbackTasks);
+      throw error;
     }
   }
 
-  static async getPac(name) {
+  async getPac(name) {
     let pkg = null;
     try {
-      pkg = db.getPackage(name);
+      pkg = await this.db.getPackage(name);
       if (!pkg) {
         return null;
       }
@@ -394,50 +333,27 @@ export class StorageManager {
         ...pkg,
         manifest,
       };
-    } catch (err) {
-      if (err instanceof FileSystemError) {
-        throw err;
-      }
-
-      throw new FileSystemError(
-        `Failed to get package "${name}": ${err.message}`,
-        pkg?.package_path || 'unknown'
-      );
-    }
-  }
-  // FIXME: CREATE DB METHODS FOR UPDATING ONLINE_ID
-  /**
-   * Update the online_id field for a tec in the local database
-   * @param {string} name - The name of the tec
-   * @param {string} onlineId - The online ID to store
-   * @returns {Promise<void>}
-   */
-  static async updateTecOnlineId(name, onlineId) {
-    try {
-      const updateResult = db.updateSnippet(name, { online_id: onlineId });
-      if (!updateResult) {
-        throw new Error(`Failed to update online ID for snippet ${name}`);
-      }
     } catch (error) {
-      console.error(`Failed to update online ID for snippet ${name}:`, error);
       throw error;
     }
   }
 
-  /**
-   * Update the online_id field for a pac in the local database
-   * @param {string} name - The name of the pac
-   * @param {string} onlineId - The online ID to store
-   * @returns {Promise<void>}
-   */
-  static async updatePacOnlineId(name, onlineId) {
+  async updateTecOnlineId(name, onlineId) {
     try {
-      const updateResult = db.updatePackage(name, { online_id: onlineId });
-      if (!updateResult) {
-        throw new Error(`Failed to update online ID for package ${name}`);
-      }
+      await this.db.updateSnippet(name, {
+        online_id: onlineId,
+      });
     } catch (error) {
-      console.error(`Failed to update online ID for package ${name}:`, error);
+      throw error;
+    }
+  }
+
+  async updatePacOnlineId(name, onlineId) {
+    try {
+      await this.db.updatePackage(name, {
+        online_id: onlineId,
+      });
+    } catch (error) {
       throw error;
     }
   }

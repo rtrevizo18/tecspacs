@@ -130,9 +130,9 @@ export class DatabaseManager {
   async createTables() {
     try {
       await this.db.runBatchAsync(SCHEMAS);
-    } catch (err) {
+    } catch (error) {
       // Error created by runBatchAsync
-      throw err;
+      throw error;
     }
   }
 
@@ -162,10 +162,12 @@ export class DatabaseManager {
       ]);
 
       // Return the ID of created snippet
-      return await this.db.getAsync(
+      const newSnippet = await this.db.getAsync(
         'SELECT id FROM snippets WHERE name = ?',
         name
-      ).id;
+      );
+
+      return newSnippet.id;
     } catch (error) {
       if (error instanceof FileSystemError) {
         throw error;
@@ -201,8 +203,8 @@ export class DatabaseManager {
       }
 
       return result;
-    } catch (err) {
-      throw err;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -222,7 +224,7 @@ export class DatabaseManager {
 
       return results;
     } catch (error) {
-      throw err;
+      throw error;
     }
   }
   // If name or content are null, reject
@@ -406,30 +408,32 @@ export class DatabaseManager {
       this.db
         .runAsync('DELETE FROM packages WHERE name = ?', name)
         .then(result => {
-          throw new FileSystemError(`Failed to create package ${name}` + err);
+          throw new FileSystemError(`Failed to create package ${name}` + error);
         })
         .catch(() => {
           //Give up lol
-          throw err;
+          throw error;
         });
     }
   }
 
   async getPackage(name) {
-    const stmt = 'SELECT * FROM packages WHERE name = ?';
-
     try {
+      if (!name) {
+        throw new UserError(
+          'Empty name provided, Please provide a valid snippet name!'
+        );
+      }
+      const stmt = 'SELECT * FROM packages WHERE name = ?';
+
       const result = await this.db.getAsync(stmt, name);
 
       if (!result) {
-        throw new UserError(`Package ${name} does not exist!`);
+        return null;
       }
 
       return result;
     } catch (error) {
-      if (error instanceof UserError) {
-        throw error;
-      }
       throw new FileSystemError("Couldn't retrieve package information");
     }
   }

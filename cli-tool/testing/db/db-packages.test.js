@@ -247,9 +247,7 @@ describe('db: Database Manager package methods', () => {
     });
 
     test('2. Should throw UserError for non-existent package', async () => {
-      await expect(db.getPackage('non-existent-package')).rejects.toThrow(
-        'Package non-existent-package does not exist!'
-      );
+      await expect(db.getPackage('non-existent-package')).resolves.toBeNull();
     });
 
     test('3. Should retrieve package with default values', async () => {
@@ -674,9 +672,7 @@ describe('db: Database Manager package methods', () => {
       await db.deletePackage(testObj.name);
 
       // Package should no longer exist
-      await expect(db.getPackage(testObj.name)).rejects.toThrow(
-        `Package ${testObj.name} does not exist!`
-      );
+      await expect(db.getPackage(testObj.name)).resolves.toBeNull();
     });
 
     test('2. Should throw error when deleting non-existent package', async () => {
@@ -709,7 +705,7 @@ describe('db: Database Manager package methods', () => {
       expect(remaining.name).toBe(package2.name);
 
       // package1 should be gone
-      await expect(db.getPackage(package1.name)).rejects.toThrow();
+      await expect(db.getPackage(package1.name)).resolves.toBeNull();
     });
   });
 
